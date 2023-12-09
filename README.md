@@ -2,12 +2,11 @@
 The MAss-Radius DIaGRAm with Sliders (MARDIGRAS) is a visualization tool that allows a simple and easy manipulation of mass-radius relationships (also known as iso-composition curves) with interactive sliders.
 
 To run the program, download the repository and run with python:
-'''
+```
 git clone https://github.com/an0wen/MARDIGRAS
 cd MARDIGRAS
 python mardigras.py
-'''
-
+```
 Three curves are controlled by sliders:
 1. Aguichine et al. 2021 (link), where the envelope is pure water in supercritical state, and a pure steam atmosphere ontop
 2. Lopez & Fortney 2014 (link), where the envelope is made of gas with 1xSolar to 50xSolar metallicity
