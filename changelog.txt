@@ -1,0 +1,64 @@
+#####################################################
+CHANGE LOG
+
+
+
+#####################################################
+v0.1 - beta release
+Author: Artyom (Artem) Aguichine
+
+
+#####################################################
+v1.0 - first release
+Author: Artyom (Artem) Aguichine
+Date: 2024/04/24
+
+New files:
+- ./models/Aguichine2021_fit_coefficients_2024.dat
+- ./data/catalog_exoplanets.dat
+- ./data/catalog_targets.dat
+
+Deprecated files:
+- ./models/Aguichine2021_fit_coefficients.dat
+- ./models/Aguichine2021_mr_all.dat
+- ./data/solarsystem.dat
+- ./data/PS_2023.12.08_19.54.38.tab
+- ./data/compo_targets.dat
+
+Changes:
+1. Clean-up of source code.
+
+2. Solar system planets are no longer represented by 
+   red markers, but with their alchemy symbols. In the
+   code, planets are defined in the script, and are no
+   longer read from the data file.
+
+3. For the Aguichine+2021 model, the validity range
+   in mass is no longer extracted from the full grid
+   (Aguichine2021_mr_all.dat), but was added as two
+   columns in the new file 
+   "Aguichine2021_fit_coefficients_2024.dat". This
+   helps reducing the amount of data needed to be
+   stored locally, and the amount of data loaded
+   upon execution of the code.
+
+4. Update of exoplanets and targets catalogs format,
+   and both catalogs were renamed for clarity. The 
+   exoplanet catalog can now be easily updated using
+   the NASA Exoplanet Archive's Table Access Protocol 
+   (TAP). Use the link below, and simply copy/paste 
+   all the content generated in your browser to
+   the .dat file. Make sure to keep the header, and 
+   update the header with the relevant information.
+   It is possible to use either actual planet mass 
+   (pl_masse), or the best available estimate among
+   M, M*sin(i), or M*sin(i)/sin(i) (pl_bmasse).
+   The two corresponding links are (choose one):
+   https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=select+pl_name,pl_rade,pl_radeerr1,pl_radeerr2,pl_masse,pl_masseerr1,pl_masseerr2,pl_eqt+from+ps+where+default_flag=1&format=tsv
+   https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=select+pl_name,pl_rade,pl_radeerr1,pl_radeerr2,pl_bmasse,pl_bmasseerr1,pl_bmasseerr2,pl_eqt+from+ps+where+default_flag=1&format=tsv
+   It is recommended to use the first option, since
+   an inaccurate mass results in the wrong position
+   in the mass-radius plane, which can lead to 
+   a misinterpretation of planet composition.
+
+
