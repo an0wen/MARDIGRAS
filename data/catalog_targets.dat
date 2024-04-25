@@ -1,0 +1,14 @@
+# Update the catalog by copy/pasting the content from the NASA Exoplanet Archive's Table Access Protocol (TAP)
+# https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=select+pl_name,pl_rade,pl_radeerr1,pl_radeerr2,pl_masse,pl_masseerr1,pl_masseerr2,pl_eqt+from+ps+where+default_flag=1&format=tsv
+#
+# or this link if you want to use best planet mass estimate (mass, m*sin(i), or m*sin(i)/sin(i)):
+# https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=select+pl_name,pl_rade,pl_radeerr1,pl_radeerr2,pl_bmasse,pl_bmasseerr1,pl_bmasseerr2,pl_eqt+from+ps+where+default_flag=1&format=tsv
+#
+# Last update: 2024/04/24 - normal mass
+# Warning: remember to keep this header (10 lines, 1st planet on line 11)
+#
+# pl_name	pl_rade	pl_radeerr1	pl_radeerr2	pl_masse	pl_masseerr1	pl_masseerr2	pl_eqt
+TOI-836 b	1.704	0.067	-0.067	4.53000	0.92000	-0.86000	8.71000000000e+02
+TOI-836 c	2.587	0.088	-0.088	9.60000	2.70000	-2.50000	6.65000000000e+02
+GJ 1214 b	2.733	0.033	-0.031	8.41000	0.36000	-0.35000	5.67000000000e+02
+K2-18 b	2.370	0.220	-0.220	8.92000	1.70000	-1.60000	2.84000000000e+02
