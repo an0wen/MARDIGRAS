@@ -1,81 +1,31 @@
-##############################################
-#
-#   READ FIT COEFFICIENTS
-#
-##############################################
-# %matplotlib inline
-# %matplotlib widget
 import numpy as np
 import matplotlib.pyplot as plt
-# from numpy import genfromtxt
 from matplotlib.widgets import Button, Slider
+from matplotlib import patheffects
 
 from scipy.interpolate import RegularGridInterpolator
 
-# %matplotlib inline
-# from ipywidgets import interact, interactive, fixed, interact_manual, FloatSlider, Box, HBox, VBox, Label, Layout, Button, Box, FloatText, Textarea, Dropdown, IntSlider
-# import ipywidgets as widgets
-# from IPython.display import display
-
+##############################################
+#
+#   READ MODELS
+#
+##############################################
 
 #Paths to models
 path_models = "./models/"
 
-path_aguichine = path_models + "Aguichine2021_fit_coefficients.dat"
-path_aguichine2 = path_models + "Aguichine2021_mr_all.dat"
+path_aguichine = path_models + "Aguichine2021_fit_coefficients_2024.dat"
 path_zeng = path_models + "Zeng2016.dat"
 
-#listcmf = []
-#listwmf = []
-#listteq = []
-#lista = []
-#listb = []
-#listc = []
-#listd = []
-#i=0
-#with open(path_aguichine, 'r') as file:
-#    exit
-#    for row in file:
-#        i=i+1
-#        if i > n_header and row != '\n':
-#            #print(row.split())
-#            cmf, wmf, teq, a, b, d, c, e, f, g, h = row.split()
-#            listcmf.append(float(cmf))
-#            listwmf.append(float(wmf))
-#            listteq.append(float(teq))
-#            lista.append(float(a))
-#            listb.append(float(b))
-#            listc.append(float(c))
-#            listd.append(float(d))
 
 # Load fit coefficients from Aguichine et al. 2021
-listcmf,listwmf,listteq,lista,listb,listd,listc = np.loadtxt(path_aguichine,skiprows=19,unpack=True,usecols=(0,1,2,3,4,5,6))
+listcmf,listwmf,listteq,lista,listb,listd,listc,listmasslow,listmasshigh \
+    = np.loadtxt(path_aguichine,skiprows=19,unpack=True,usecols=(0,1,2,3,4,5,6,11,12))
         
 def radius(mass,a,b,c,d):
     return 10**(a*np.log10(mass) + np.exp(-d*(np.log10(mass)+c)) + b)
 
-# Load limits from Aguichine et al. 2021
-listmasslow = []
-listmasshigh = []
-listm_small = []
-liste_small = []
-i=0
-with open(path_aguichine2, 'r') as file:
-    for row in file:
-        # Skip header
-        if i <= 21:
-            i=i+1
-        # Take values of small lists
-        elif row != '\n':
-            cmf, wmf, teq, tb, mb, ma, rb,ra,err = row.split()
-            if int(err) == 0:
-                listm_small.append(float(mb)+float(ma))
-        # Grab values and reset small lists
-        else:
-            listmasslow.append(listm_small[0])
-            listmasshigh.append(listm_small[-1])
-            listm_small = []
-            liste_small = []
+
 
 # Load curves from Zeng et al. 2016
 zeng_mass,zeng_purefe,zeng_rock,zeng_50wat,zeng_100wat,zeng_earth = np.loadtxt(path_zeng,delimiter="\t",skiprows=1,unpack=True)
@@ -106,7 +56,6 @@ interp_d = RegularGridInterpolator((dimcmf, dimteq, dimwmf), data_d, method='lin
 
 interp_masslimlow = RegularGridInterpolator((dimcmf, dimteq, dimwmf), data_masslimlow, method='linear', bounds_error=False, fill_value=None)
 interp_masslimhigh = RegularGridInterpolator((dimcmf, dimteq, dimwmf), data_masslimhigh, method='linear', bounds_error=False, fill_value=None)
-
 
 
 ##############################################
@@ -164,30 +113,76 @@ interp_lf14 = RegularGridInterpolator((dim_met_lf14, dim_age_lf14, dim_teq_lf14,
 ##############################################
 
 # Exoplanet catalog
-list_catalog_rp,list_catalog_rpe1,list_catalog_rpe2,list_catalog_mp,list_catalog_mpe1,list_catalog_mpe2 = np.genfromtxt("./data/PS_2023.12.08_19.54.38.tab",skip_header=18,delimiter="\t",unpack=True,usecols=(2,3,4,5,6,7),filling_values=0.0)
 
-list_rp = []
-list_rpe1 = []
-list_rpe2 = []
-list_mp = []
-list_mpe1 = []
-list_mpe2 = []
+# Update the catalog by copy/pasting the content from the NASA Exoplanet Archive's Table Access Protocol (TAP)
+# https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=select+pl_name,pl_rade,pl_radeerr1,pl_radeerr2,pl_masse,pl_masseerr1,pl_masseerr2,pl_eqt+from+ps+where+default_flag=1&format=tsv
+#
+# or this link if you want to use best planet mass estimate (mass, m*sin(i), or m*sin(i)/sin(i)):
+# https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=select+pl_name,pl_rade,pl_radeerr1,pl_radeerr2,pl_bmasse,pl_bmasseerr1,pl_bmasseerr2,pl_eqt+from+ps+where+default_flag=1&format=tsv
+
+list_catalog_rp,list_catalog_rpe1,list_catalog_rpe2,list_catalog_mp,list_catalog_mpe1,list_catalog_mpe2 \
+    = np.genfromtxt("./data/catalog_exoplanets.dat",skip_header=10,delimiter="\t",unpack=True,usecols=(1,2,3,4,5,6),filling_values=0.0)
+
+# This procedure removes planets that don't have radius and/or mass measurements
+# the goal is to have arrays of smaller size, so that rendering is faster when sliders are used
+list_exo_rp = []
+list_exo_rpe1 = []
+list_exo_rpe2 = []
+list_exo_mp = []
+list_exo_mpe1 = []
+list_exo_mpe2 = []
 for i in range(len(list_catalog_rp)):
     if list_catalog_rp[i]!=0.0 and list_catalog_mp[i]!=0.0:
-        list_rp = np.append(list_rp,[list_catalog_rp[i]])
-        list_rpe1 = np.append(list_rpe1,[list_catalog_rpe1[i]])
-        list_rpe2 = np.append(list_rpe2,[list_catalog_rpe2[i]])
-        list_mp = np.append(list_mp,[list_catalog_mp[i]])
-        list_mpe1 = np.append(list_mpe1,[list_catalog_mpe1[i]])
-        list_mpe2 = np.append(list_mpe2,[list_catalog_mpe2[i]])
+        list_exo_rp = np.append(list_exo_rp,[list_catalog_rp[i]])
+        list_exo_rpe1 = np.append(list_exo_rpe1,[list_catalog_rpe1[i]])
+        list_exo_rpe2 = np.append(list_exo_rpe2,[list_catalog_rpe2[i]])
+        list_exo_mp = np.append(list_exo_mp,[list_catalog_mp[i]])
+        list_exo_mpe1 = np.append(list_exo_mpe1,[list_catalog_mpe1[i]])
+        list_exo_mpe2 = np.append(list_exo_mpe2,[list_catalog_mpe2[i]])
 
-list_catalog_rp,list_catalog_rpe1,list_catalog_rpe2,list_catalog_mp,list_catalog_mpe1,list_catalog_mpe2 = list_rp,list_rpe1,list_rpe2,list_mp,list_mpe1,list_mpe2
 
-# Targets
-list_targets_mp,list_targets_mpe2,list_targets_mpe1,list_targets_rp,list_targets_rpe2,list_targets_rpe1 = np.genfromtxt("./data/compo_targets.dat",skip_header=1,unpack=True,usecols=(1,2,3,4,5,6),filling_values=0.0)
+# Targets catalog
+# The intended use is to showcase a few targets (dedicated study, new discovery, update of parameters, etc.)
+# The catalog of targets must have the same formatting as the exoplanet catalog.
+list_targets_rp,list_targets_rpe1,list_targets_rpe2,list_targets_mp,list_targets_mpe1,list_targets_mpe2\
+    = np.genfromtxt("./data/catalog_targets.dat",skip_header=10,delimiter="\t",unpack=True,usecols=(1,2,3,4,5,6),filling_values=0.0)
 
-# Solar System
-list_ssystem_mp,list_ssystem_rp = np.genfromtxt("./data/solarsystem.dat",delimiter='\t',unpack=True,usecols=(0,1))
+
+##############################################
+#
+#   SOLAR SYSTEM DATA
+#
+##############################################
+
+# Data for masses and radii of planets (in Earth masses and Earth radii)
+ss_planet_data = {
+    "Mercury": (0.055, 0.383),
+    "Venus": (0.815, 0.949),
+    "Earth": (1.0, 1.0),
+    "Mars": (0.107, 0.532),
+    "Jupiter": (317.8, 11.21),
+    "Saturn": (95.2, 9.45),
+    "Uranus": (14.6, 4.01),
+    "Neptune": (17.2, 3.88),
+}
+
+# Alchemy symbols for planets
+ss_alchemy_symbols = {
+    "Mercury": "☿",
+    "Venus": "♀",
+    "Earth": "⊕",
+    "Mars": "♂",
+    "Jupiter": "♃",
+    "Saturn": "♄",
+    "Uranus": "♅",
+    "Neptune": "♆",
+}
+
+# Extracting data
+ss_planets = list(ss_planet_data.keys())
+ss_masses = [ss_planet_data[planet][0] for planet in ss_planets]
+ss_radii = [ss_planet_data[planet][1] for planet in ss_planets]
+ss_symbols = [ss_alchemy_symbols[planet] for planet in ss_planets]
 
 
 ##############################################
@@ -195,98 +190,6 @@ list_ssystem_mp,list_ssystem_rp = np.genfromtxt("./data/solarsystem.dat",delimit
 #   MAKE PLOT
 #
 ##############################################
-
-## Definition of the plot_iop function, our "callback function".
-# def plot_iop(cmf_iop,wmf_iop,teq_iop,cmf_zeng,met_lf14,age_lf14,teq_lf14,fenv_lf14):
-#     ## Get parameters and validity range or IOP model
-#     masslimlow,masslimhigh=interp_masslimlow([cmf_iop,teq_iop,wmf_iop]),interp_masslimhigh([cmf_iop,teq_iop,wmf_iop])
-#     a,b,c,d = interp_a([cmf_iop,teq_iop,wmf_iop]),interp_b([cmf_iop,teq_iop,wmf_iop]),interp_c([cmf_iop,teq_iop,wmf_iop]),interp_d([cmf_iop,teq_iop,wmf_iop])
-#     if cmf_iop < 0.0 or cmf_iop > 0.9 or wmf_iop < 0.1 or wmf_iop > 1.0 or teq_iop < 400.0 or teq_iop > 1300.0:
-#         masslimlow,masslimhigh = 1.0,1.0
-
-#     ## Get parameters of LF14 model
-
-#     ## Plot parameters
-#     xmin, xmax, nx = 0.5, 30.0, 50
-#     ymin, ymax     = 0.5, 4.5
-
-#     xmin_lim,xmax_lim = masslimlow,masslimhigh
-
-#     ## Plot the figure
-#     # x and y of IOP curves
-#     x = np.logspace(np.log10(xmin), np.log10(xmax), nx)
-#     r_iop_ext = 10**(a*np.log10(x) + 
-#              np.exp(-d*(np.log10(x)+c)) + 
-#              b)
-
-#     # x and y of valid region of IOP
-#     x_lim = np.logspace(np.log10(xmin_lim), np.log10(xmax_lim), nx)
-#     r_iop = 10**(a*np.log10(x_lim) + 
-#              np.exp(-d*(np.log10(x_lim)+c)) + 
-#              b)
-
-#     plt.figure(figsize=(6,5))
-
-#     # Zeng fixed
-#     zeng_width=1.0
-#     plt.plot(zeng_mass,zeng_purefe,linewidth=zeng_width,color='black')
-#     plt.plot(zeng_mass,zeng_earth,linewidth=zeng_width,color='brown')
-#     plt.plot(zeng_mass,zeng_rock,linewidth=zeng_width,color='grey')
-#     plt.plot(zeng_mass,zeng_50wat,linewidth=zeng_width,color='cyan')
-#     plt.plot(zeng_mass,zeng_100wat,linewidth=zeng_width,color='cyan')
-
-#     # Zeng sliding
-#     zeng_radii_slide = np.zeros(nx)
-#     for i in range(nx):
-#         zeng_radii_slide[i] = interp_zeng([x[i],cmf_zeng])
-#     plt.plot(x,zeng_radii_slide,linewidth=2,color='grey')
-
-
-#     # IOP sliding
-#     plt.plot(x_lim, r_iop, linewidth=2,color='blue')
-#     plt.plot(x, r_iop_ext, linewidth=2,color='blue',ls='--')
-
-#     # LF14 sliding
-#     lf14_radii_slide = np.zeros(nx)
-#     for i in range(nx):
-#         lf14_radii_slide[i] = interp_lf14([met_lf14,age_lf14,teq_lf14,x[i],fenv_lf14])
-#     plt.plot(x,lf14_radii_slide,linewidth=2,color='red')
-
-#     # Exoplanet catalog
-
-#     # User defined points
-#     plt.plot([1],[1],marker='+')
-
-#     ## Set up the figure axes, etc.
-#     plt.xscale("log")
-#     #plt.yscale("log")
-#     plt.xlim(xmin, xmax)
-#     plt.ylim(ymin, ymax)
-#     plt.xlabel('Mass [Me]')
-#     plt.ylabel('Radius [Re]')
-#     plt.grid(visible=True,which='major', axis='both')
-
-
-# cmf_iop=FloatSlider(min=0.0, max=0.9, step=0.01, value=0.3,description='CMF')
-# wmf_iop=FloatSlider(min=0.1, max=1.0, step=0.01, value=0.5,description='WMF')
-# teq_iop=FloatSlider(min=400.0, max=1300.0, step=10.0, value=700.0,description='Teq')
-
-# cmf_zeng=FloatSlider(min=0.0, max=1.0, step=0.01, value=0.325,description='CMF')
-
-# met_lf14=FloatSlider(min=1, max=50, step=1, value=1,description='Z(met)')
-# age_lf14=FloatSlider(min=0.1, max=10, step=0.1, value=1,description='Age')
-# teq_lf14=FloatSlider(min=160, max=1500, step=10, value=700,description='Teq')
-# fenv_lf14=FloatSlider(min=0.01, max=20, step=0.001, value=1,description='f_env')
-
-# box_iop = VBox([Label(value='Aguichine+2021', layout=Layout(display="flex", justify_content="center")),cmf_iop, wmf_iop, teq_iop])
-# box_zeng = VBox([Label(value='Zeng+2016',layout=Layout(display="flex", justify_content="center")),cmf_zeng])
-# box_lf14 = VBox([Label(value='Lopez&Fortney 2014', layout=Layout(display="flex", justify_content="center")),met_lf14, age_lf14, teq_lf14,fenv_lf14])
-
-# widget_layout = Box([box_lf14,box_iop,box_zeng])
-
-# output_plot = widgets.interactive_output(plot_iop, {'cmf_iop': cmf_iop, 'wmf_iop': wmf_iop, 'teq_iop': teq_iop,'cmf_zeng':cmf_zeng,'met_lf14':met_lf14,'age_lf14':age_lf14,'teq_lf14':teq_lf14,'fenv_lf14':fenv_lf14})
-
-# display(widget_layout,output_plot)
 
 # The parametrized function to be plotted
 def rad_iop(x, cmf_iop,wmf_iop,teq_iop):
@@ -311,13 +214,16 @@ def rad_iop_lim(x, cmf_iop,wmf_iop,teq_iop):
 def rad_lf(x,met,age,teq,fenv):
     rp=np.zeros(len(x))
     for i in range(len(x)):
-        rp[i] = interp_lf14([met,age,teq,x[i],fenv])
+        if x[i] >= 1.0 and x[i] <= 20.0:
+            rp[i] = interp_lf14([met,age,teq,x[i],fenv]).item(0)
+        else:
+            rp[i] = np.inf
     return rp
 
 def rad_zeng(x,cmf):
     rp=np.zeros(len(x))
     for i in range(len(x)):
-        rp[i] = interp_zeng([x[i],cmf])
+        rp[i] = interp_zeng([x[i],cmf]).item(0)
     return rp
 
 
@@ -327,7 +233,6 @@ xmin, xmax, nx = 0.5, 30.0, 50
 ymin, ymax     = 0.5, 4.5
 
 x = np.logspace(np.log10(xmin), np.log10(xmax), nx)
-
 
 # Define initial parameters
 init_cmf_iop = 0.3
@@ -362,28 +267,34 @@ line_lf, = ax.plot(x, rad_lf(x,init_met_lf,init_age_lf,init_teq_lf,init_fenv_lf)
 line_zeng, = ax.plot(x, rad_zeng(x,init_cmf_zeng),lw=2,color='brown',zorder=10)
 
 # Planets
-list_catalog_mpe = [abs(list_catalog_mpe2), list_catalog_mpe1]
-list_catalog_rpe = [abs(list_catalog_rpe2), list_catalog_rpe1]
+list_exo_mpe = [abs(list_exo_mpe2), list_exo_mpe1]
+list_exo_rpe = [abs(list_exo_rpe2), list_exo_rpe1]
 list_targets_mpe = [abs(list_targets_mpe2), list_targets_mpe1]
 list_targets_rpe = [abs(list_targets_rpe2), list_targets_rpe1]
-# scatter_catalog, = 
-ax.errorbar(list_catalog_mp,list_catalog_rp,
-            yerr=list_catalog_rpe,
-            xerr=list_catalog_mpe,
+
+# Exoplanets from the catalog file
+ax.errorbar(list_exo_mp,list_exo_rp,
+            yerr=list_exo_rpe,
+            xerr=list_exo_mpe,
             fmt='o',zorder=-30,
             c="black",alpha=0.2)
-# scatter_targets, = ax.errorbar()
+# Exoplanets to be highlighted
 ax.errorbar(list_targets_mp,list_targets_rp,
             yerr=list_targets_rpe,
             xerr=list_targets_mpe,
-            ls='',c='yellow',elinewidth=3,
-            marker='*',mfc='yellow',mec='black', ms=15, mew=1,
+            ls='',c='orange',elinewidth=3,
+            marker='*',mfc='orange',mec='black', ms=15, mew=1,
             zorder=50)
-# scatter_ssystem, = ax.errorbar()
-ax.errorbar(list_ssystem_mp,list_ssystem_rp,
-            ls='',c='red',
-            marker='o',mfc='red',mec='black', ms=5, mew=1,
-            zorder=35)
+# Solar system planets
+for i in range(len(ss_planets)):
+    text = plt.text(ss_masses[i], ss_radii[i], ss_alchemy_symbols[ss_planets[i]], \
+            fontsize=15, ha='center', va='center', color='red')
+    text.set_path_effects([patheffects.withStroke(linewidth=1, foreground='black')])  # Add outline to text
+
+# ax.errorbar(list_ssystem_mp,list_ssystem_rp,
+#             ls='',c='red',
+#             marker='o',mfc='red',mec='black', ms=5, mew=1,
+#             zorder=35)
 
 # Zeng fixed
 zeng_width=1.0
@@ -399,7 +310,7 @@ fig.subplots_adjust(top=0.7)
 
 # Labels
 ax.text(0.05, 0.95, 'Aguichine et al. 2021',weight='bold',
-        transform=fig.transFigure,
+        transform=fig.transFigure,color='blue',
         bbox={'ec': 'white', 'fc':'white','color':'blue', 'pad': 10})
 
 # Make a horizontal slider to control the CMF
@@ -437,7 +348,7 @@ teq_iop_slider = Slider(
 
 # Labels
 ax.text(0.38, 0.95, 'Lopez & Fortney 2014',weight='bold',
-        transform=fig.transFigure,
+        transform=fig.transFigure,color='red',
         bbox={'ec': 'white', 'fc':'white','color':'blue', 'pad': 10})
 
 # Make a horizontal slider to control the Metallicity
@@ -486,8 +397,24 @@ fenv_lf_slider = Slider(
 
 # Labels
 ax.text(0.75, 0.95, 'Zeng et al. 2016',weight='bold',
-        transform=fig.transFigure,
+        transform=fig.transFigure,color='brown',
         bbox={'ec': 'white', 'fc':'white','color':'blue', 'pad': 10})
+
+ax.text(0.55, 0.60, '100% Core',fontsize=5,
+        color='black',rotation=10)
+        
+ax.text(0.55, 0.76, 'Earth-like',fontsize=5,
+        color='brown',rotation=10)
+
+ax.text(0.55, 0.93, '100% Mantle',fontsize=5,
+        color='grey',rotation=15)
+
+ax.text(0.55, 1.10, '50% Liquid H2O',fontsize=5,
+        color='blue',rotation=17)
+
+ax.text(0.55, 1.23, '100% Liquid H2O',fontsize=5,
+        color='blue',rotation=17)
+
 
 # Make a horizontal slider to control the CMF
 ax_cmf_zeng = fig.add_axes([0.75, 0.90, 0.15, 0.02])
