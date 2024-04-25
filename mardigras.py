@@ -1,23 +1,15 @@
-##############################################
-#
-#   READ FIT COEFFICIENTS
-#
-##############################################
-# %matplotlib inline
-# %matplotlib widget
 import numpy as np
 import matplotlib.pyplot as plt
-# from numpy import genfromtxt
 from matplotlib.widgets import Button, Slider
 from matplotlib import patheffects
 
 from scipy.interpolate import RegularGridInterpolator
 
-# %matplotlib inline
-# from ipywidgets import interact, interactive, fixed, interact_manual, FloatSlider, Box, HBox, VBox, Label, Layout, Button, Box, FloatText, Textarea, Dropdown, IntSlider
-# import ipywidgets as widgets
-# from IPython.display import display
-
+##############################################
+#
+#   READ MODELS
+#
+##############################################
 
 #Paths to models
 path_models = "./models/"
