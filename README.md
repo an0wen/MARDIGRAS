@@ -37,6 +37,7 @@ where the following arguments have been added to the query:
 - the planet radius is not null
 - the planet mass is not null
 - the planet mass represents the actual mass, i.e. not Msini or Msini/sini
+- *hardcoded in the script*: the error on the planet mass is lower than 50%
 
 Since mardigras is a tool to infer composition based on mass and radius (and other extra parameters), it is critical to use actual measurements of mass and radius, and avoid values that are upper/lower limits, derived from empirical mass-radius relations, or are somewhat controversial. This being said,  users are free to add or remove constraints depending on their goal.
 
