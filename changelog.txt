@@ -62,3 +62,24 @@ Changes:
    a misinterpretation of planet composition.
 
 
+#####################################################
+v1.2 - few ergonomic and visual improvements
+Author: Artyom (Artem) Aguichine
+Date: 2024/08/22
+
+Changes:
+1. The query link for catalog updates has been updated, and
+   it now contains additional constraints.
+
+2. An additional constraint has been hardcoded: only planets
+   with an error bar on mass smaller than 50% are displayed.
+   This is done to avoid loosely constrained masses that do not
+   help the analysis on a demographic level, but can be changed 
+   or removed by users.
+
+3. Catalog headers (exoplanets and targets) are now optional.
+
+4. Added named tags for each targets, using the name provided
+   in the target catalog. The positions of labels are spread
+   out using a semi-automatic method, but may fail if the catalog
+   of targets changes.
