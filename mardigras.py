@@ -222,18 +222,13 @@ def rad_iop_lim(x, cmf_iop,wmf_iop,teq_iop):
     return (o1+o2)*0.5
 
 def rad_lf(x,met,age,teq,fenv):
-    rp=np.zeros(len(x))
-    for i in range(len(x)):
-        if x[i] >= 1.0 and x[i] <= 20.0:
-            rp[i] = interp_lf14([met,age,teq,x[i],fenv]).item(0)
-        else:
-            rp[i] = np.inf
+    input0 = np.stack((np.full(len(x),met),np.full(len(x),age),np.full(len(x),teq),x,np.full(len(x),fenv)), axis=-1)
+    rp = interp_lf14(input0)
     return rp
 
 def rad_zeng(x,cmf):
-    rp=np.zeros(len(x))
-    for i in range(len(x)):
-        rp[i] = interp_zeng([x[i],cmf]).item(0)
+    input0 = np.stack((x,np.full(len(x),cmf)), axis=-1)
+    rp = interp_zeng(input0)
     return rp
 
 
