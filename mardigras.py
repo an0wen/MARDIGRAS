@@ -3,11 +3,9 @@
 #   READ FIT COEFFICIENTS
 #
 ##############################################
-# %matplotlib inline
-# %matplotlib widget
+
 import numpy as np
 import matplotlib.pyplot as plt
-# from numpy import genfromtxt
 from matplotlib.widgets import Button, Slider
 from matplotlib import patheffects
 
