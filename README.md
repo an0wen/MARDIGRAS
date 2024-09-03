@@ -39,8 +39,28 @@ The following arguments have been added to the query:
 - The planet mass represents the actual mass, i.e., not Msini or Msini/sini
 - *hardcoded in the script*: the error on the planet mass is lower than 50%
 
-Since MARDIGRAS is a tool to infer composition based on mass and radius (and other parameters), it is critical to use actual measurements of mass and radius and avoid values that are upper/lower limits, derived from empirical mass-radius relations, or are somewhat controversial. That said, users are free to add or remove constraints depending on their goal.
+Since *mardigras* is a tool to infer composition based on mass and radius (and other parameters), it is critical to use actual measurements of mass and radius and avoid values that are upper/lower limits, derived from empirical mass-radius relations, or are somewhat controversial. That said, users are free to add or remove constraints depending on their goal.
 
 The header can be removed, or additional lines can be added (comment lines start with #), but the file must contain at least 7 columns separated by tabs. Extra columns can be present and will be ignored. The program can handle empty entries for mass, radius, and their error bars.
 
 The catalog of targets (planets shown as stars on the figure) has the same formatting as the full catalog. It is recommended to have at most 7 highlighted targets to avoid overloading the figure.
+
+## Credits
+
+If you use *mardigras*, please give credit to the initial release:
+```
+@article{Aguichine_2024,
+doi = {10.3847/2515-5172/ad7506},
+url = {https://dx.doi.org/10.3847/2515-5172/ad7506},
+year = {2024},
+month = {aug},
+publisher = {The American Astronomical Society},
+volume = {8},
+number = {8},
+pages = {216},
+author = {Artyom Aguichine},
+title = {mardigras: A Visualization Tool of Theoretical Mass–Radius Relations in the Context of Planetary Science},
+journal = {Research Notes of the AAS},
+abstract = {Over the past two decades, mass–radius relations have become a crucial tool for inferring the bulk composition of exoplanets using only their measured masses and radii. These relations, often referred to as isocomposition curves, are derived from interior structure models by calculating the theoretical radius as a function of mass for a given fixed planetary composition. Each mass–radius curve can be influenced by a variety of parameters, such as planetary composition, age, and equilibrium temperature. Navigating this parameter space can be cumbersome, particularly when models or their results are not open-source. To address this challenge, I have developed MAss–Radius DIaGRAm with Sliders, a visualization tool that enables simple, fast, and interactive exploration of the parameter space that governs mass–radius relations for any given model.}
+}
+```
