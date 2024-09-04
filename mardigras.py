@@ -104,7 +104,7 @@ dim_fenv_lf14= np.array([0.01,0.02,0.05,0.1,0.2,0.5,1.0,2.0,5.0,10.0,20.0])
 
 data_r_lf14 = np.reshape(list_r_lf14,(2,3,3,8,11))
 
-interp_lf14 = RegularGridInterpolator((dim_met_lf14, dim_age_lf14, dim_teq_lf14, dim_mass_lf14, dim_fenv_lf14), data_r_lf14, method='linear', bounds_error=False, fill_value=None)
+interp_lf14 = RegularGridInterpolator((dim_met_lf14, dim_age_lf14, dim_teq_lf14, dim_mass_lf14, dim_fenv_lf14), data_r_lf14, method='linear', bounds_error=False, fill_value=np.inf)
 
 
 ##############################################
@@ -150,13 +150,10 @@ list_targets_rp,list_targets_rpe1,list_targets_rpe2,list_targets_mp,list_targets
 import csv
 file_path = "./data/catalog_targets.dat"
 list_targets_names = []
-i=0
 with open(file_path, 'r') as file:
     reader = csv.reader(file, delimiter='\t')
     for row in reader:
-        i+=1
-        if i > 10: list_targets_names.append(row[0])  # Append the first column (label) to the list
-
+        if row[0][0]!='#': list_targets_names.append(row[0])
 
 ##############################################
 #
@@ -403,12 +400,13 @@ fig.text(0.38, 0.95, 'Lopez & Fortney 2014',weight='bold',
 ax_met_lf = fig.add_axes([0.45, 0.90, 0.15, 0.02])  # [left, bottom, width, height]
 met_lf_slider = Slider(
     ax=ax_met_lf,
-    label='M [Sun] ',
+    label='Met [Solar] ',
     valmin=1.0,
     valmax=50.0,
     valinit=init_met_lf,
     valfmt=' %2.0f'
 )
+met_lf_slider.label.set_size(9)
 
 # Make a horizontal oriented slider to control the Age
 ax_age_lf = fig.add_axes([0.45, 0.85, 0.15, 0.02])  # [left, bottom, width, height]
