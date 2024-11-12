@@ -83,3 +83,14 @@ Changes:
    in the target catalog. The positions of labels are spread
    out using a semi-automatic method, but may fail if the catalog
    of targets changes.
+
+
+#####################################################
+v1.2.1 - few ergonomic and visual improvements
+Author: Artyom (Artem) Aguichine
+Date: 2024/11/11
+
+Changes:
+1. Cosmetic changes on sliders' labels
+
+2. Sliders for age and f_env in LF14 are now log-scaled
