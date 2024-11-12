@@ -357,37 +357,49 @@ fig.text(0.05, 0.95, 'Aguichine et al. 2021',weight='bold',
         bbox={'ec': 'white', 'fc':'white','color':'blue', 'pad': 10})
 
 # Make a horizontal slider to control the CMF
-ax_cmf_iop = fig.add_axes([0.1, 0.90, 0.15, 0.02])  # [left, bottom, width, height]
+ax_cmf_iop = fig.add_axes([0.08, 0.90, 0.15, 0.02])  # [left, bottom, width, height]
 cmf_iop_slider = Slider(
     ax=ax_cmf_iop,
-    label='CMF ',
+    label='CMF  ',
     valmin=0.0,
     valmax=0.9,
     valinit=init_cmf_iop,
     valfmt=' %1.3f'
 )
+cmf_iop_slider.label.set_ha('left')
+cmf_iop_slider.label.set_position((-0.4, 0.5))
+cmf_iop_slider.valtext.set_ha('right')
+cmf_iop_slider.valtext.set_position((1.55, 0.5))  # Shift text to the right outside the slider
 
 # Make a horizontal oriented slider to control the WMF
-ax_wmf_iop = fig.add_axes([0.1, 0.85, 0.15, 0.02])  # [left, bottom, width, height]
+ax_wmf_iop = fig.add_axes([0.08, 0.85, 0.15, 0.02])  # [left, bottom, width, height]
 wmf_iop_slider = Slider(
     ax=ax_wmf_iop,
-    label="WMF ",
+    label="WMF  ",
     valmin=0.1,
     valmax=1.0,
     valinit=init_wmf_iop,
     valfmt=' %1.3f'
 )
+wmf_iop_slider.label.set_ha('left')
+wmf_iop_slider.label.set_position((-0.4, 0.5))
+wmf_iop_slider.valtext.set_ha('right')
+wmf_iop_slider.valtext.set_position((1.55, 0.5))  # Shift text to the right outside the slider
 
 # Make a horizontal oriented slider to control the Teq
-ax_teq_iop = fig.add_axes([0.1, 0.80, 0.15, 0.02])  # [left, bottom, width, height]
+ax_teq_iop = fig.add_axes([0.08, 0.80, 0.15, 0.02])  # [left, bottom, width, height]
 teq_iop_slider = Slider(
     ax=ax_teq_iop,
-    label="Teq [K] ",
+    label=r"T$_{\mathrm{eq}}$  ",
     valmin=400.0,
     valmax=1300.0,
     valinit=init_teq_iop,
-    valfmt=' %4.0f'
+    valfmt=' %4.0f K'
 )
+teq_iop_slider.label.set_ha('left')
+teq_iop_slider.label.set_position((-0.4, 0.5))
+teq_iop_slider.valtext.set_ha('right')
+teq_iop_slider.valtext.set_position((1.55, 0.5))  # Shift text to the right outside the slider
 
 # Lopez & Fortney 2014 Slider
 
@@ -397,49 +409,69 @@ fig.text(0.38, 0.95, 'Lopez & Fortney 2014',weight='bold',
         bbox={'ec': 'white', 'fc':'white','color':'blue', 'pad': 10})
 
 # Make a horizontal slider to control the Metallicity
-ax_met_lf = fig.add_axes([0.45, 0.90, 0.15, 0.02])  # [left, bottom, width, height]
+ax_met_lf = fig.add_axes([0.4, 0.90, 0.15, 0.02])  # [left, bottom, width, height]
 met_lf_slider = Slider(
     ax=ax_met_lf,
-    label='Met [Solar] ',
+    label='Met  ',
     valmin=1.0,
     valmax=50.0,
     valinit=init_met_lf,
-    valfmt=' %2.0f'
+    valfmt=' x%2.0f Solar'
 )
-met_lf_slider.label.set_size(9)
+#met_lf_slider.label.set_size(9)
+met_lf_slider.label.set_ha('left')
+met_lf_slider.label.set_position((-0.4, 0.5))
+met_lf_slider.valtext.set_size(9)
+met_lf_slider.valtext.set_ha('right')
+met_lf_slider.valtext.set_position((1.65, 0.5))  # Shift text to the right outside the slider
 
 # Make a horizontal oriented slider to control the Age
-ax_age_lf = fig.add_axes([0.45, 0.85, 0.15, 0.02])  # [left, bottom, width, height]
+ax_age_lf = fig.add_axes([0.4, 0.85, 0.15, 0.02])  # [left, bottom, width, height]
 age_lf_slider = Slider(
     ax=ax_age_lf,
-    label="Age [Gyr] ",
-    valmin=0.1,
-    valmax=10.0,
-    valinit=init_age_lf,
-    valfmt=' %2.1f'
+    label="Age  ",
+    valmin=np.log10(0.1),
+    valmax=np.log10(10.0),
+    valinit=np.log10(init_age_lf),
+    #valfmt=' %2.1f'
 )
+age_lf_slider.label.set_ha('left')
+age_lf_slider.label.set_position((-0.4, 0.5))
+age_lf_slider.valtext.set_text(f'{init_age_lf: 2.1f} Gyr')
+age_lf_slider.valtext.set_ha('right')
+age_lf_slider.valtext.set_position((1.65, 0.5))  # Shift text to the right outside the slider
+
 
 # Make a horizontal oriented slider to control the Teq
-ax_teq_lf = fig.add_axes([0.45, 0.80, 0.15, 0.02])  # [left, bottom, width, height]
+ax_teq_lf = fig.add_axes([0.4, 0.80, 0.15, 0.02])  # [left, bottom, width, height]
 teq_lf_slider = Slider(
     ax=ax_teq_lf,
-    label="Teq [K] ",
+    label=r"T$_{\mathrm{eq}}$  ",
     valmin=160.0,
     valmax=1500.0,
     valinit=init_teq_lf,
-    valfmt=' %4.0f'
+    valfmt=' %4.0f K'
 )
+teq_lf_slider.label.set_ha('left')
+teq_lf_slider.label.set_position((-0.4, 0.5))
+teq_lf_slider.valtext.set_ha('right')
+teq_lf_slider.valtext.set_position((1.65, 0.5))  # Shift text to the right outside the slider
 
 # Make a horizontal oriented slider to control the Envelope fraction
-ax_fenv_lf = fig.add_axes([0.45, 0.75, 0.15, 0.02])  # [left, bottom, width, height]
+ax_fenv_lf = fig.add_axes([0.4, 0.75, 0.15, 0.02])  # [left, bottom, width, height]
 fenv_lf_slider = Slider(
     ax=ax_fenv_lf,
-    label="f [%] ",
-    valmin=0.01,
-    valmax=20.0,
-    valinit=init_fenv_lf,
-    valfmt=' %2.2f'
+    label=r"f$_{\mathrm{env}}$  ",
+    valmin=np.log10(0.01),
+    valmax=np.log10(20.0),
+    valinit=np.log10(init_fenv_lf),
+    #valfmt=" %2.2f %%"
 )
+fenv_lf_slider.label.set_ha('left')
+fenv_lf_slider.label.set_position((-0.4, 0.5))
+fenv_lf_slider.valtext.set_text(f'{init_fenv_lf: 2.2f} %')
+fenv_lf_slider.valtext.set_ha('right')
+fenv_lf_slider.valtext.set_position((1.65, 0.5))  # Shift text to the right outside the slider
 
 # Zeng+2016 Slider
 
@@ -461,10 +493,16 @@ cmf_zeng_slider = Slider(
 
 # The function to be called anytime a slider's value changes
 def update(val):
+    age_linear = 10**age_lf_slider.val
+    age_lf_slider.valtext.set_text(f'{age_linear: 2.1f} Gyr')  # Update displayed value
+
+    fenv_linear = 10**fenv_lf_slider.val
+    fenv_lf_slider.valtext.set_text(f'{fenv_linear: 2.2f} %')  # Update displayed value
+
     line_iop.set_ydata(rad_iop(x, cmf_iop_slider.val,wmf_iop_slider.val,teq_iop_slider.val))
     line_iop_lim.set_ydata(rad_iop_lim(x, cmf_iop_slider.val,wmf_iop_slider.val,teq_iop_slider.val))
     fig.canvas.draw_idle()
-    line_lf.set_ydata(rad_lf(x, met_lf_slider.val,age_lf_slider.val,teq_lf_slider.val,fenv_lf_slider.val))
+    line_lf.set_ydata(rad_lf(x, met_lf_slider.val,age_linear,teq_lf_slider.val,fenv_linear))
     line_zeng.set_ydata(rad_zeng(x, cmf_zeng_slider.val))
 
 # register the update function with each slider
