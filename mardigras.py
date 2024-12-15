@@ -8,9 +8,34 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button, Slider
 from matplotlib import patheffects
+import mplcursors
 
 from scipy.interpolate import RegularGridInterpolator
 
+import requests
+import os
+from datetime import datetime
+import argparse
+
+# Define command-line arguments
+parser = argparse.ArgumentParser(description="Run the mardigras tool with optional features.")
+
+# Flag to update the catalog
+parser.add_argument(
+    "--update-nae-catalog",
+    action="store_true",
+    help="Update the exoplanet catalog before starting the tool.",
+)
+
+# Flag to choose another type of catalog
+parser.add_argument(
+    "--catalog",
+    choices=["NAE", "PlanetS"],
+    default="NAE",
+    help="Choose the exoplanet catalog to use. Default is NAE."
+)
+
+args = parser.parse_args()
 
 #Paths to models
 path_models = "./models/"
@@ -115,11 +140,89 @@ interp_lf14 = RegularGridInterpolator((dim_met_lf14, dim_age_lf14, dim_teq_lf14,
 
 # Exoplanet catalog
 
-# Update the catalog by copy/pasting the content from the NASA Exoplanet Archive's Table Access Protocol (TAP)
-# https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=select+pl_name,pl_rade,pl_radeerr1,pl_radeerr2,pl_masse,pl_masseerr1,pl_masseerr2,pl_eqt+from+ps+where+default_flag=1+and+pl_controv_flag=0+and+pl_rade+is+not+null+and+pl_masse+is+not+null+and+pl_bmassprov='Mass'&format=tsv
+def check_internet_connection():
+    """Check if there is internet access by pinging a known URL."""
+    try:
+        requests.get("https://www.google.com", timeout=5)
+        return True
+    except requests.ConnectionError:
+        return False
+
+def update_nae_exoplanet_catalog(catalog_url, output_file):
+    """
+    Updates the NAE exoplanet catalog from the NASA Exoplanet Archive TAP.
+    Parameters:
+        catalog_url (str): The TAP URL with the SQL query for the catalog.
+        output_file (str): Path to save the downloaded catalog.
+    """
+    if not check_internet_connection():
+        print("No internet connection. Unable to update the exoplanet catalog.")
+        return
+
+    try:
+        response = requests.get(catalog_url, timeout=10)
+        response.raise_for_status()  # Raise an error for HTTP issues
+        
+        # Prepare the header
+        header = [
+            "# NASA Exoplanet Catalog",
+            f"# Source: {catalog_url}",
+            f"# Catalog last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        ]
+        
+        # Write the header and data to the file
+        with open(output_file, "w") as f:
+            f.write("\n".join(header) + "\n")
+            # Add '#' to the parameter names
+            data_lines = response.text.splitlines()
+            f.write("# " + data_lines[0] + "\n")  # Add # to parameter names
+            f.write("\n".join(data_lines[1:]) + "\n")
+        
+        print(f"Catalog updated successfully and saved to {output_file}")
+    except requests.RequestException as e:
+        print(f"Error fetching the catalog: {e}")
+
+def read_nae_last_update(output_file):
+    """
+    Reads the date of the last update from the catalog file and prints it.
+    Parameters:
+        output_file (str): Path to the catalog file.
+    """
+    if not os.path.exists(output_file):
+        print("Catalog file does not exist.")
+        return
+
+    try:
+        with open(output_file, "r") as f:
+            for line in f:
+                if line.startswith("# Catalog last updated:"):
+                    print(line.strip())
+                    break
+    except Exception as e:
+        print(f"Error reading the catalog: {e}")
+
+# File paths and URL of the NAE Catalog
+nae_catalog_url = ("https://exoplanetarchive.ipac.caltech.edu/TAP/sync?"
+               "query=select+pl_name,pl_rade,pl_radeerr1,pl_radeerr2,"
+               "pl_masse,pl_masseerr1,pl_masseerr2,pl_eqt+from+ps+where+"
+               "default_flag=1+and+pl_controv_flag=0+and+pl_rade+is+not+null+"
+               "and+pl_masse+is+not+null+and+pl_bmassprov='Mass'&format=tsv")
+nae_output_file = "./data/catalog_exoplanets.dat"
+
+if args.update_nae_catalog:
+    # Update the catalog
+    update_nae_exoplanet_catalog(nae_catalog_url, nae_output_file)
+else:
+    # Check for existing catalog and print the last update date
+    read_nae_last_update(nae_output_file)
 
 list_catalog_rp,list_catalog_rpe1,list_catalog_rpe2,list_catalog_mp,list_catalog_mpe1,list_catalog_mpe2 \
-    = np.genfromtxt("./data/catalog_exoplanets.dat",delimiter="\t",unpack=True,usecols=(1,2,3,4,5,6),filling_values=0.0)
+    = np.genfromtxt(nae_output_file,delimiter="\t",unpack=True,usecols=(1,2,3,4,5,6),filling_values=0.0)
+
+# Load the exoplanet names
+list_catalog_names = np.genfromtxt(
+    nae_output_file, delimiter="\t", dtype=str, usecols=0
+)
 
 # This procedure removes planets that don't have radius and/or mass measurements
 # the goal is to have arrays of smaller size, so that rendering is faster when sliders are used
@@ -129,6 +232,7 @@ list_exo_rpe2 = []
 list_exo_mp = []
 list_exo_mpe1 = []
 list_exo_mpe2 = []
+list_exo_names = []
 for i in range(len(list_catalog_rp)):
     exo_mass_prec = 0.5 # minimum precision on exoplanet mass
     if list_catalog_rp[i]!=0.0 and list_catalog_mp[i]!=0.0 \
@@ -140,6 +244,7 @@ for i in range(len(list_catalog_rp)):
         list_exo_mp = np.append(list_exo_mp,[list_catalog_mp[i]])
         list_exo_mpe1 = np.append(list_exo_mpe1,[list_catalog_mpe1[i]])
         list_exo_mpe2 = np.append(list_exo_mpe2,[list_catalog_mpe2[i]])
+        list_exo_names = np.append(list_exo_names,[list_catalog_names[i]])
 
 # Targets catalog
 # The intended use is to showcase a few targets (dedicated study, new discovery, update of parameters, etc.)
@@ -276,11 +381,56 @@ list_targets_mpe = [abs(list_targets_mpe2), list_targets_mpe1]
 list_targets_rpe = [abs(list_targets_rpe2), list_targets_rpe1]
 
 # Exoplanets from the catalog file
-ax.errorbar(list_exo_mp,list_exo_rp,
+catalog_points = ax.errorbar(list_exo_mp,list_exo_rp,
             yerr=list_exo_rpe,
             xerr=list_exo_mpe,
             fmt='o',zorder=-30,
             c="black",alpha=0.2)
+
+# # Add interactive cursors for annotations
+# cursor = mplcursors.cursor(catalog_points, hover=True)
+
+# # Define the annotation behavior
+# @cursor.connect("add")
+# def on_add(sel):
+#     index = sel.index
+#     sel.annotation.set_text(list_exo_names[index])
+#     sel.annotation.set_fontsize(10)
+#     sel.annotation.get_bbox_patch().set_alpha(0.8)
+
+# Add hover annotations
+annot = ax.annotate(
+    "",
+    xy=(0, 0),
+    xytext=(10, 10),
+    textcoords="offset points",
+    bbox=dict(boxstyle="round", fc="w"),
+    arrowprops=dict(arrowstyle="->"),
+)
+annot.set_visible(False)
+
+def update_annot(ind):
+    """Update the annotation based on the index of the closest point."""
+    x, y = catalog_points[0].get_data()
+    annot.xy = (x[ind["ind"][0]], y[ind["ind"][0]])
+    text = f"{list_exo_names[ind['ind'][0]]}"
+    annot.set_text(text)
+    annot.get_bbox_patch().set_alpha(0.8)
+
+def hover(event):
+    """Event handler for mouse motion."""
+    vis = annot.get_visible()
+    if event.inaxes == ax:
+        cont, ind = catalog_points[0].contains(event)
+        if cont:
+            update_annot(ind)
+            annot.set_visible(True)
+            fig.canvas.draw_idle()
+        elif vis:
+            annot.set_visible(False)
+            fig.canvas.draw_idle()
+
+fig.canvas.mpl_connect("motion_notify_event", hover)
 
 # Exoplanets to be highlighted
 ax.errorbar(list_targets_mp,list_targets_rp,
