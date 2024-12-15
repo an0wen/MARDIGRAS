@@ -22,17 +22,17 @@ parser = argparse.ArgumentParser(description="Run the mardigras tool with option
 
 # Flag to update the catalog
 parser.add_argument(
-    "--update-nae-catalog",
+    "--update-nea-catalog",
     action="store_true",
-    help="Update the exoplanet catalog before starting the tool.",
+    help="Update the NASA Exoplanet Archive catalog before starting the tool.",
 )
 
 # Flag to choose another type of catalog
 parser.add_argument(
     "--catalog",
-    choices=["NAE", "PlanetS"],
-    default="NAE",
-    help="Choose the exoplanet catalog to use. Default is NAE."
+    choices=["NEA", "PlanetS"],
+    default="NEA",
+    help="Choose the exoplanet catalog to use. Default is NEA."
 )
 
 args = parser.parse_args()
@@ -148,9 +148,9 @@ def check_internet_connection():
     except requests.ConnectionError:
         return False
 
-def update_nae_exoplanet_catalog(catalog_url, output_file):
+def update_nea_exoplanet_catalog(catalog_url, output_file):
     """
-    Updates the NAE exoplanet catalog from the NASA Exoplanet Archive TAP.
+    Updates the NEA exoplanet catalog from the NASA Exoplanet Archive TAP.
     Parameters:
         catalog_url (str): The TAP URL with the SQL query for the catalog.
         output_file (str): Path to save the downloaded catalog.
@@ -182,7 +182,7 @@ def update_nae_exoplanet_catalog(catalog_url, output_file):
     except requests.RequestException as e:
         print(f"Error fetching the catalog: {e}")
 
-def read_nae_last_update(output_file):
+def read_nea_last_update(output_file):
     """
     Reads the date of the last update from the catalog file and prints it.
     Parameters:
@@ -201,27 +201,27 @@ def read_nae_last_update(output_file):
     except Exception as e:
         print(f"Error reading the catalog: {e}")
 
-# File paths and URL of the NAE Catalog
-nae_catalog_url = ("https://exoplanetarchive.ipac.caltech.edu/TAP/sync?"
+# File paths and URL of the NEA Catalog
+nea_catalog_url = ("https://exoplanetarchive.ipac.caltech.edu/TAP/sync?"
                "query=select+pl_name,pl_rade,pl_radeerr1,pl_radeerr2,"
                "pl_masse,pl_masseerr1,pl_masseerr2,pl_eqt+from+ps+where+"
                "default_flag=1+and+pl_controv_flag=0+and+pl_rade+is+not+null+"
                "and+pl_masse+is+not+null+and+pl_bmassprov='Mass'&format=tsv")
-nae_output_file = "./data/catalog_exoplanets.dat"
+nea_output_file = "./data/catalog_exoplanets.dat"
 
-if args.update_nae_catalog:
+if args.update_nea_catalog:
     # Update the catalog
-    update_nae_exoplanet_catalog(nae_catalog_url, nae_output_file)
+    update_nea_exoplanet_catalog(nea_catalog_url, nea_output_file)
 else:
     # Check for existing catalog and print the last update date
-    read_nae_last_update(nae_output_file)
+    read_nea_last_update(nea_output_file)
 
 list_catalog_rp,list_catalog_rpe1,list_catalog_rpe2,list_catalog_mp,list_catalog_mpe1,list_catalog_mpe2 \
-    = np.genfromtxt(nae_output_file,delimiter="\t",unpack=True,usecols=(1,2,3,4,5,6),filling_values=0.0)
+    = np.genfromtxt(nea_output_file,delimiter="\t",unpack=True,usecols=(1,2,3,4,5,6),filling_values=0.0)
 
 # Load the exoplanet names
 list_catalog_names = np.genfromtxt(
-    nae_output_file, delimiter="\t", dtype=str, usecols=0
+    nea_output_file, delimiter="\t", dtype=str, usecols=0
 )
 
 # This procedure removes planets that don't have radius and/or mass measurements

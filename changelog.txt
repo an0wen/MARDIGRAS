@@ -94,3 +94,17 @@ Changes:
 1. Cosmetic changes on sliders' labels
 
 2. Sliders for age and f_env in LF14 are now log-scaled
+
+
+#####################################################
+v1.2.2 - automatic catalog update and show exoplanet name on hover
+Author: Artyom (Artem) Aguichine
+Date: 2024/12/14
+
+Changes:
+1. The NASA Exoplanet Archive (NEA) catalog can be automatically updated
+   by running the program with the flag "--update-nea-catalog":
+   `python3 mardigras.py --update-nae-catalog`
+
+2. Hovering the mouse cursor over a planet will show a text box
+   with the exoplanet's name.
