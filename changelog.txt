@@ -102,8 +102,8 @@ Author: Artyom (Artem) Aguichine
 Date: 2024/12/14
 
 Changes:
-1. The NASA Exoplanet Catalog (NAE) can be automatically updated
-   by running the program with the flag "--update-nae-catalog":
+1. The NASA Exoplanet Archive (NEA) catalog can be automatically updated
+   by running the program with the flag "--update-nea-catalog":
    `python3 mardigras.py --update-nae-catalog`
 
 2. Hovering the mouse cursor over a planet will show a text box
