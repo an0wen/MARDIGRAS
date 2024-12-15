@@ -15,7 +15,7 @@ python3 mardigras.py
 <br/>
 <br/>
 
-### Availabel options
+### Available options
 *mardigras* can be run with the following options:
 1. Updating the NEA catalog:
    ```
