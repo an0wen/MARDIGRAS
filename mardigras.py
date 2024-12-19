@@ -11,12 +11,39 @@ from matplotlib import patheffects
 
 from scipy.interpolate import RegularGridInterpolator
 
+import requests
+import os
+from datetime import datetime
+import argparse
+
+# Define command-line arguments
+parser = argparse.ArgumentParser(description="Run the mardigras tool with optional features.")
+
+# Flag to update the catalog
+parser.add_argument(
+    "--update-nea-catalog",
+    action="store_true",
+    help="Update the NASA Exoplanet Archive catalog before starting the tool.",
+)
+
+# Flag to choose another type of catalog
+parser.add_argument(
+    "--catalog",
+    choices=["NEA", "PlanetS"],
+    default="NEA",
+    help="Choose the exoplanet catalog to use. Default is NEA."
+)
+
+args = parser.parse_args()
 
 #Paths to models
 path_models = "./models/"
 
-# Load curves from Zeng et al. 2016
+path_aguichine = path_models + "Aguichine2021_fit_coefficients_2024.dat"
 path_zeng = path_models + "Zeng2016.dat"
+
+
+# Load curves from Zeng et al. 2016
 zeng_mass,zeng_purefe,zeng_rock,zeng_50wat,zeng_100wat,zeng_earth = np.loadtxt(path_zeng,delimiter="\t",skiprows=1,unpack=True)
 
 
@@ -26,7 +53,7 @@ zeng_mass,zeng_purefe,zeng_rock,zeng_50wat,zeng_100wat,zeng_earth = np.loadtxt(p
 #
 ##############################################
 
-path_swe = path_models + "A24_SWE_all.dat"
+path_swe = path_models + "A24_SWE_all_v2.dat"
 
 swe_host_stars = ['M', 'G']
 swe_teqs = [500, 600, 700]
@@ -36,13 +63,13 @@ swe_masses = [0.2       ,  0.254855  ,  0.32475535,  0.41382762,  0.52733018,
         2.25767578,  2.87689978,  3.66596142,  4.67144294,  5.95270288,
         7.58538038,  9.66586048, 12.31696422, 15.69519941, 20.        ]  # 20 points in mass from 0.1 to 2.0
 
-swe_ages = np.array([0.01,0.0101,0.0105,0.011,0.012,0.015,
+swe_ages = np.array([0.001,0.0015,0.002,0.003,0.005,0.01,
                         0.02,0.03,0.05,
                         0.1,0.2,0.5,
                         1.0,2.0,5.0,
                         10,20])
 
-listrpfull = np.loadtxt(path_swe,skiprows=35,unpack=True,usecols=(5))
+listrpfull = np.loadtxt(path_swe,skiprows=36,unpack=True,usecols=(5))
 listrpfull = np.delete(listrpfull, np.arange(17, listrpfull.size, 18))
 
 listrpfull_m = listrpfull[0:int(len(listrpfull)/2)]
@@ -58,8 +85,9 @@ swe_dim_age = swe_ages
 swe_data_radius_m = np.reshape(listrpfull_m,(12,3,20,17))
 swe_data_radius_g = np.reshape(listrpfull_g,(12,3,20,17))
 
-interp_swe_m = RegularGridInterpolator((swe_dim_wmf, swe_dim_teq, swe_dim_mass, swe_dim_age), swe_data_radius_m, method='linear', bounds_error=False, fill_value=np.inf)
-interp_swe_g = RegularGridInterpolator((swe_dim_wmf, swe_dim_teq, swe_dim_mass, swe_dim_age), swe_data_radius_g, method='linear', bounds_error=False, fill_value=np.inf)
+fill_value = np.nan
+interp_swe_m = RegularGridInterpolator((swe_dim_wmf, swe_dim_teq, swe_dim_mass, swe_dim_age), swe_data_radius_m, method='slinear', bounds_error=False, fill_value=fill_value)
+interp_swe_g = RegularGridInterpolator((swe_dim_wmf, swe_dim_teq, swe_dim_mass, swe_dim_age), swe_data_radius_g, method='slinear', bounds_error=False, fill_value=fill_value)
 
 ##############################################
 #
@@ -82,7 +110,7 @@ list_zeng_mg_radii = np.interp(list_zeng_masses, list_zeng_mg_m, list_zeng_mg_r)
 # create interpolator
 dimcmf_zeng = np.array([0.0,0.325,1.0])
 data_zeng = np.vstack((list_zeng_mg_radii, list_zeng_ea_radii,list_zeng_fe_radii)).T
-interp_zeng = RegularGridInterpolator((list_zeng_masses,dimcmf_zeng), data_zeng, method='linear', bounds_error=False, fill_value=None)
+interp_zeng = RegularGridInterpolator((list_zeng_masses,dimcmf_zeng), data_zeng, method='slinear', bounds_error=False, fill_value=None)
 
 
 ##############################################
@@ -104,53 +132,53 @@ t24_data_radius_rcb = np.zeros((2,3,4,11,8))
 t24_data_radius_mbar = np.zeros((2,3,4,11,8))
 t24_data_radius_nbar = np.zeros((2,3,4,11,8))
 
-data0 = np.genfromtxt(path_models+"T24_grids/RCB_100Myr.csv",delimiter=",",filling_values=np.inf,comments='#',skip_header=2)
-data1 = np.genfromtxt(path_models+"T24_grids/RCB_1Gyr.csv",delimiter=",",filling_values=np.inf,comments='#',skip_header=2)
-data2 = np.genfromtxt(path_models+"T24_grids/RCB_10Gyr.csv",delimiter=",",filling_values=np.inf,comments='#',skip_header=2)
+data0 = np.genfromtxt(path_models+"T24_grids/RCB_100Myr.csv",delimiter=",",filling_values=fill_value,comments='#',skip_header=2)
+data1 = np.genfromtxt(path_models+"T24_grids/RCB_1Gyr.csv",delimiter=",",filling_values=fill_value,comments='#',skip_header=2)
+data2 = np.genfromtxt(path_models+"T24_grids/RCB_10Gyr.csv",delimiter=",",filling_values=fill_value,comments='#',skip_header=2)
 t24_data_radius_rcb[0,0,:,:,:] = data0[:,1:].reshape(4,11,8)
 t24_data_radius_rcb[0,1,:,:,:] = data1[:,1:].reshape(4,11,8)
 t24_data_radius_rcb[0,2,:,:,:] = data2[:,1:].reshape(4,11,8)
 
-data0 = np.genfromtxt(path_models+"T24_grids/RCB_100Myr_50.csv",delimiter=",",filling_values=np.inf,comments='#',skip_header=2)
-data1 = np.genfromtxt(path_models+"T24_grids/RCB_1Gyr_50.csv",delimiter=",",filling_values=np.inf,comments='#',skip_header=2)
-data2 = np.genfromtxt(path_models+"T24_grids/RCB_10Gyr_50.csv",delimiter=",",filling_values=np.inf,comments='#',skip_header=2)
+data0 = np.genfromtxt(path_models+"T24_grids/RCB_100Myr_50.csv",delimiter=",",filling_values=fill_value,comments='#',skip_header=2)
+data1 = np.genfromtxt(path_models+"T24_grids/RCB_1Gyr_50.csv",delimiter=",",filling_values=fill_value,comments='#',skip_header=2)
+data2 = np.genfromtxt(path_models+"T24_grids/RCB_10Gyr_50.csv",delimiter=",",filling_values=fill_value,comments='#',skip_header=2)
 t24_data_radius_rcb[1,0,:,:,:] = data0[:,1:].reshape(4,11,8)
 t24_data_radius_rcb[1,1,:,:,:] = data1[:,1:].reshape(4,11,8)
 t24_data_radius_rcb[1,2,:,:,:] = data2[:,1:].reshape(4,11,8)
 
-interp_t24_rcb = RegularGridInterpolator((dim_met_t24, dim_age_t24, dim_teq_t24, dim_mass_t24, dim_fenv_t24), t24_data_radius_rcb, method='linear', bounds_error=False, fill_value=np.inf)
+interp_t24_rcb = RegularGridInterpolator((dim_met_t24, dim_age_t24, dim_teq_t24, dim_mass_t24, dim_fenv_t24), t24_data_radius_rcb, method='linear', bounds_error=False, fill_value=fill_value)
 
-data0 = np.genfromtxt(path_models+"T24_grids/20mbar_100Myr.csv",delimiter=",",filling_values=np.inf,comments='#',skip_header=2)
-data1 = np.genfromtxt(path_models+"T24_grids/20mbar_1Gyr.csv",delimiter=",",filling_values=np.inf,comments='#',skip_header=2)
-data2 = np.genfromtxt(path_models+"T24_grids/20mbar_10Gyr.csv",delimiter=",",filling_values=np.inf,comments='#',skip_header=2)
+data0 = np.genfromtxt(path_models+"T24_grids/20mbar_100Myr.csv",delimiter=",",filling_values=fill_value,comments='#',skip_header=2)
+data1 = np.genfromtxt(path_models+"T24_grids/20mbar_1Gyr.csv",delimiter=",",filling_values=fill_value,comments='#',skip_header=2)
+data2 = np.genfromtxt(path_models+"T24_grids/20mbar_10Gyr.csv",delimiter=",",filling_values=fill_value,comments='#',skip_header=2)
 t24_data_radius_mbar[0,0,:,:,:] = data0[:,1:].reshape(4,11,8)
 t24_data_radius_mbar[0,1,:,:,:] = data1[:,1:].reshape(4,11,8)
 t24_data_radius_mbar[0,2,:,:,:] = data2[:,1:].reshape(4,11,8)
 
-data0 = np.genfromtxt(path_models+"T24_grids/20mbar_100Myr_50.csv",delimiter=",",filling_values=np.inf,comments='#',skip_header=2)
-data1 = np.genfromtxt(path_models+"T24_grids/20mbar_1Gyr_50.csv",delimiter=",",filling_values=np.inf,comments='#',skip_header=2)
-data2 = np.genfromtxt(path_models+"T24_grids/20mbar_10Gyr_50.csv",delimiter=",",filling_values=np.inf,comments='#',skip_header=2)
+data0 = np.genfromtxt(path_models+"T24_grids/20mbar_100Myr_50.csv",delimiter=",",filling_values=fill_value,comments='#',skip_header=2)
+data1 = np.genfromtxt(path_models+"T24_grids/20mbar_1Gyr_50.csv",delimiter=",",filling_values=fill_value,comments='#',skip_header=2)
+data2 = np.genfromtxt(path_models+"T24_grids/20mbar_10Gyr_50.csv",delimiter=",",filling_values=fill_value,comments='#',skip_header=2)
 t24_data_radius_mbar[1,0,:,:,:] = data0[:,1:].reshape(4,11,8)
 t24_data_radius_mbar[1,1,:,:,:] = data1[:,1:].reshape(4,11,8)
 t24_data_radius_mbar[1,2,:,:,:] = data2[:,1:].reshape(4,11,8)
 
-interp_t24_mbar = RegularGridInterpolator((dim_met_t24, dim_age_t24, dim_teq_t24, dim_mass_t24, dim_fenv_t24), t24_data_radius_mbar, method='linear', bounds_error=False, fill_value=np.inf)
+interp_t24_mbar = RegularGridInterpolator((dim_met_t24, dim_age_t24, dim_teq_t24, dim_mass_t24, dim_fenv_t24), t24_data_radius_mbar, method='linear', bounds_error=False, fill_value=fill_value)
 
-data0 = np.genfromtxt(path_models+"T24_grids/1nbar_100Myr.csv",delimiter=",",filling_values=np.inf,comments='#',skip_header=2)
-data1 = np.genfromtxt(path_models+"T24_grids/1nbar_1Gyr.csv",delimiter=",",filling_values=np.inf,comments='#',skip_header=2)
-data2 = np.genfromtxt(path_models+"T24_grids/1nbar_10Gyr.csv",delimiter=",",filling_values=np.inf,comments='#',skip_header=2)
+data0 = np.genfromtxt(path_models+"T24_grids/1nbar_100Myr.csv",delimiter=",",filling_values=fill_value,comments='#',skip_header=2)
+data1 = np.genfromtxt(path_models+"T24_grids/1nbar_1Gyr.csv",delimiter=",",filling_values=fill_value,comments='#',skip_header=2)
+data2 = np.genfromtxt(path_models+"T24_grids/1nbar_10Gyr.csv",delimiter=",",filling_values=fill_value,comments='#',skip_header=2)
 t24_data_radius_nbar[0,0,:,:,:] = data0[:,1:].reshape(4,11,8)
 t24_data_radius_nbar[0,1,:,:,:] = data1[:,1:].reshape(4,11,8)
 t24_data_radius_nbar[0,2,:,:,:] = data2[:,1:].reshape(4,11,8)
 
-data0 = np.genfromtxt(path_models+"T24_grids/1nbar_100Myr_50.csv",delimiter=",",filling_values=np.inf,comments='#',skip_header=2)
-data1 = np.genfromtxt(path_models+"T24_grids/1nbar_1Gyr_50.csv",delimiter=",",filling_values=np.inf,comments='#',skip_header=2)
-data2 = np.genfromtxt(path_models+"T24_grids/1nbar_10Gyr_50.csv",delimiter=",",filling_values=np.inf,comments='#',skip_header=2)
+data0 = np.genfromtxt(path_models+"T24_grids/1nbar_100Myr_50.csv",delimiter=",",filling_values=fill_value,comments='#',skip_header=2)
+data1 = np.genfromtxt(path_models+"T24_grids/1nbar_1Gyr_50.csv",delimiter=",",filling_values=fill_value,comments='#',skip_header=2)
+data2 = np.genfromtxt(path_models+"T24_grids/1nbar_10Gyr_50.csv",delimiter=",",filling_values=fill_value,comments='#',skip_header=2)
 t24_data_radius_nbar[1,0,:,:,:] = data0[:,1:].reshape(4,11,8)
 t24_data_radius_nbar[1,1,:,:,:] = data1[:,1:].reshape(4,11,8)
 t24_data_radius_nbar[1,2,:,:,:] = data2[:,1:].reshape(4,11,8)
 
-interp_t24_nbar = RegularGridInterpolator((dim_met_t24, dim_age_t24, dim_teq_t24, dim_mass_t24, dim_fenv_t24), t24_data_radius_nbar, method='linear', bounds_error=False, fill_value=np.inf)
+interp_t24_nbar = RegularGridInterpolator((dim_met_t24, dim_age_t24, dim_teq_t24, dim_mass_t24, dim_fenv_t24), t24_data_radius_nbar, method='linear', bounds_error=False, fill_value=fill_value)
 
 # Make the boil-off limit
 # t24_bolim_fenv = np.zeros((2,8,11))
@@ -181,11 +209,89 @@ interp_t24_nbar = RegularGridInterpolator((dim_met_t24, dim_age_t24, dim_teq_t24
 
 # Exoplanet catalog
 
-# Update the catalog by copy/pasting the content from the NASA Exoplanet Archive's Table Access Protocol (TAP)
-# https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=select+pl_name,pl_rade,pl_radeerr1,pl_radeerr2,pl_masse,pl_masseerr1,pl_masseerr2,pl_eqt+from+ps+where+default_flag=1+and+pl_controv_flag=0+and+pl_rade+is+not+null+and+pl_masse+is+not+null+and+pl_bmassprov='Mass'&format=tsv
+def check_internet_connection():
+    """Check if there is internet access by pinging a known URL."""
+    try:
+        requests.get("https://www.google.com", timeout=5)
+        return True
+    except requests.ConnectionError:
+        return False
+
+def update_nea_exoplanet_catalog(catalog_url, output_file):
+    """
+    Updates the NEA exoplanet catalog from the NASA Exoplanet Archive TAP.
+    Parameters:
+        catalog_url (str): The TAP URL with the SQL query for the catalog.
+        output_file (str): Path to save the downloaded catalog.
+    """
+    if not check_internet_connection():
+        print("No internet connection. Unable to update the exoplanet catalog.")
+        return
+
+    try:
+        response = requests.get(catalog_url, timeout=10)
+        response.raise_for_status()  # Raise an error for HTTP issues
+        
+        # Prepare the header
+        header = [
+            "# NASA Exoplanet Catalog",
+            f"# Source: {catalog_url}",
+            f"# Catalog last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        ]
+        
+        # Write the header and data to the file
+        with open(output_file, "w") as f:
+            f.write("\n".join(header) + "\n")
+            # Add '#' to the parameter names
+            data_lines = response.text.splitlines()
+            f.write("# " + data_lines[0] + "\n")  # Add # to parameter names
+            f.write("\n".join(data_lines[1:]) + "\n")
+        
+        print(f"Catalog updated successfully and saved to {output_file}")
+    except requests.RequestException as e:
+        print(f"Error fetching the catalog: {e}")
+
+def read_nea_last_update(output_file):
+    """
+    Reads the date of the last update from the catalog file and prints it.
+    Parameters:
+        output_file (str): Path to the catalog file.
+    """
+    if not os.path.exists(output_file):
+        print("Catalog file does not exist.")
+        return
+
+    try:
+        with open(output_file, "r") as f:
+            for line in f:
+                if line.startswith("# Catalog last updated:"):
+                    print(line.strip())
+                    break
+    except Exception as e:
+        print(f"Error reading the catalog: {e}")
+
+# File paths and URL of the NEA Catalog
+nea_catalog_url = ("https://exoplanetarchive.ipac.caltech.edu/TAP/sync?"
+               "query=select+pl_name,pl_rade,pl_radeerr1,pl_radeerr2,"
+               "pl_masse,pl_masseerr1,pl_masseerr2,pl_eqt+from+ps+where+"
+               "default_flag=1+and+pl_controv_flag=0+and+pl_rade+is+not+null+"
+               "and+pl_masse+is+not+null+and+pl_bmassprov='Mass'&format=tsv")
+nea_output_file = "./data/catalog_exoplanets.dat"
+
+if args.update_nea_catalog:
+    # Update the catalog
+    update_nea_exoplanet_catalog(nea_catalog_url, nea_output_file)
+else:
+    # Check for existing catalog and print the last update date
+    read_nea_last_update(nea_output_file)
 
 list_catalog_rp,list_catalog_rpe1,list_catalog_rpe2,list_catalog_mp,list_catalog_mpe1,list_catalog_mpe2 \
-    = np.genfromtxt("./data/catalog_exoplanets.dat",delimiter="\t",unpack=True,usecols=(1,2,3,4,5,6),filling_values=0.0)
+    = np.genfromtxt(nea_output_file,delimiter="\t",unpack=True,usecols=(1,2,3,4,5,6),filling_values=0.0)
+
+# Load the exoplanet names
+list_catalog_names = np.genfromtxt(
+    nea_output_file, delimiter="\t", dtype=str, usecols=0
+)
 
 # This procedure removes planets that don't have radius and/or mass measurements
 # the goal is to have arrays of smaller size, so that rendering is faster when sliders are used
@@ -195,6 +301,7 @@ list_exo_rpe2 = []
 list_exo_mp = []
 list_exo_mpe1 = []
 list_exo_mpe2 = []
+list_exo_names = []
 for i in range(len(list_catalog_rp)):
     exo_mass_prec = 0.5 # minimum precision on exoplanet mass
     if list_catalog_rp[i]!=0.0 and list_catalog_mp[i]!=0.0 \
@@ -206,6 +313,7 @@ for i in range(len(list_catalog_rp)):
         list_exo_mp = np.append(list_exo_mp,[list_catalog_mp[i]])
         list_exo_mpe1 = np.append(list_exo_mpe1,[list_catalog_mpe1[i]])
         list_exo_mpe2 = np.append(list_exo_mpe2,[list_catalog_mpe2[i]])
+        list_exo_names = np.append(list_exo_names,[list_catalog_names[i]])
 
 # Targets catalog
 # The intended use is to showcase a few targets (dedicated study, new discovery, update of parameters, etc.)
@@ -310,7 +418,7 @@ def rad_zeng(x,cmf):
 
 
 ## Plot parameters
-xmin, xmax, nx = 0.5, 30.0, 50
+xmin, xmax, nx = 0.5, 30.0, 100
 ymin, ymax     = 0.5, 4.5
 
 x = np.logspace(np.log10(xmin), np.log10(xmax), nx)
@@ -353,6 +461,14 @@ line_t24, = ax.plot(x, current_t24,lw=2,color='red',zorder=30)
 # line_t24_lim, = ax.plot(x, rad_lim_t23(x,init_top_t24,init_met_t24,init_teq_t24),lw=1,ls='-',color='red',zorder=25)
 line_zeng, = ax.plot(x, rad_zeng(x,init_cmf_zeng),lw=2,color='brown',zorder=10)
 
+# Minor lines
+line_swe_m, = ax.plot(x, rad_swe_m(x,init_wmf_swe,init_teq_swe,init_age_swe),lw=1,color='blue',ls='--',zorder=5)
+line_swe_g, = ax.plot(x, rad_swe_m(x,init_wmf_swe,init_teq_swe,init_age_swe),lw=1,color='blue',ls='--',zorder=5)
+line_t24_rcb, = ax.plot(x, rad_t24_rcb(x,init_met_t24,init_age_t24,init_teq_t24,init_fenv_t24),lw=1,ls='--',color='red',zorder=5)
+line_t24_mbar, = ax.plot(x, rad_t24_mbar(x,init_met_t24,init_age_t24,init_teq_t24,init_fenv_t24),lw=1,ls='--',color='red',zorder=5)
+line_t24_nbar, = ax.plot(x, rad_t24_nbar(x,init_met_t24,init_age_t24,init_teq_t24,init_fenv_t24),lw=1,ls='--',color='red',zorder=5)
+
+
 # Planets
 list_exo_mpe = [abs(list_exo_mpe2), list_exo_mpe1]
 list_exo_rpe = [abs(list_exo_rpe2), list_exo_rpe1]
@@ -360,11 +476,46 @@ list_targets_mpe = [abs(list_targets_mpe2), list_targets_mpe1]
 list_targets_rpe = [abs(list_targets_rpe2), list_targets_rpe1]
 
 # Exoplanets from the catalog file
-ax.errorbar(list_exo_mp,list_exo_rp,
+catalog_points = ax.errorbar(list_exo_mp,list_exo_rp,
             yerr=list_exo_rpe,
             xerr=list_exo_mpe,
             fmt='o',zorder=-30,
             c="black",alpha=0.2)
+
+# Add hover annotations
+annot = ax.annotate(
+    "",
+    xy=(0, 0),
+    xytext=(10, 10),
+    textcoords="offset points",
+    bbox=dict(boxstyle="round", fc="w"),
+    arrowprops=dict(arrowstyle="->"),
+    zorder = 100
+)
+annot.set_visible(False)
+
+def update_annot(ind):
+    """Update the annotation based on the index of the closest point."""
+    x, y = catalog_points[0].get_data()
+    annot.xy = (x[ind["ind"][0]], y[ind["ind"][0]])
+    text = f"{list_exo_names[ind['ind'][0]]}"
+    annot.set_text(text)
+    annot.get_bbox_patch().set_alpha(0.8)
+
+def hover(event):
+    """Event handler for mouse motion."""
+    vis = annot.get_visible()
+    if event.inaxes == ax:
+        cont, ind = catalog_points[0].contains(event)
+        if cont:
+            update_annot(ind)
+            annot.set_visible(True)
+            fig.canvas.draw_idle()
+        elif vis:
+            annot.set_visible(False)
+            fig.canvas.draw_idle()
+
+fig.canvas.mpl_connect("motion_notify_event", hover)
 
 # Exoplanets to be highlighted
 ax.errorbar(list_targets_mp,list_targets_rp,
@@ -492,7 +643,7 @@ ax_age_swe = fig.add_axes([0.08, 0.85, 0.15, 0.02])  # [left, bottom, width, hei
 age_swe_slider = Slider(
     ax=ax_age_swe,
     label="Age  ",
-    valmin=np.log10(0.01),
+    valmin=np.log10(0.0010000001),
     valmax=np.log10(19.99999),
     valinit=np.log10(init_age_swe),
     #valfmt=' %4.0f K'
@@ -622,6 +773,10 @@ def update(val):
     current_swe = swe_func[func_swe_index](x,wmf_swe_linear,teq_swe_slider.val,age_linear_swe)
     line_swe.set_ydata(current_swe)
 
+    line_swe_m.set_ydata(rad_swe_m(x,wmf_swe_linear,teq_swe_slider.val,age_linear_swe))
+    line_swe_g.set_ydata(rad_swe_g(x,wmf_swe_linear,teq_swe_slider.val,age_linear_swe))
+
+
     # Update T24
     age_t24_linear = 10**age_t24_slider.val
     age_t24_slider.valtext.set_text(f'{age_t24_linear:#.3g} Gyr')  # Update displayed value
@@ -634,6 +789,11 @@ def update(val):
     current_t24 = t24_func[func_t24_index](x,met_t24_slider.val,age_t24_linear,teq_t24_slider.val,fenv_t24_linear)
     line_t24.set_ydata(current_t24)
     # line_t24_lim.set_ydata(rad_lim_t23(x,top_t24_slider.val,met_t24_slider.val,teq_t24_slider.val))
+
+    line_t24_rcb.set_ydata(rad_t24_rcb(x,met_t24_slider.val,age_t24_linear,teq_t24_slider.val,fenv_t24_linear))
+    line_t24_mbar.set_ydata(rad_t24_mbar(x,met_t24_slider.val,age_t24_linear,teq_t24_slider.val,fenv_t24_linear))
+    line_t24_nbar.set_ydata(rad_t24_nbar(x,met_t24_slider.val,age_t24_linear,teq_t24_slider.val,fenv_t24_linear))
+
 
     # Update Zeng
     line_zeng.set_ydata(rad_zeng(x, cmf_zeng_slider.val))
