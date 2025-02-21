@@ -53,10 +53,10 @@ zeng_mass,zeng_purefe,zeng_rock,zeng_50wat,zeng_100wat,zeng_earth = np.loadtxt(p
 #
 ##############################################
 
-path_swe = path_models + "A24_SWE_all_v2.dat"
+path_swe = path_models + "A24_SWE_all_v3.dat"
 
 swe_host_stars = ['M', 'G']
-swe_teqs = [500, 600, 700]
+swe_teqs = [400, 500, 700, 900, 1100, 1300, 1500]
 swe_wmfs = [0.1,1,10,20,30,40,50,60,70,80,90,100]  # 12 water mass fractions from 0.05 to 0.60
 swe_masses = [0.2       ,  0.254855  ,  0.32475535,  0.41382762,  0.52733018,
         0.67196366,  0.85626648,  1.09111896,  1.39038559,  1.77173358,
@@ -72,6 +72,9 @@ swe_ages = np.array([0.001,0.0015,0.002,0.003,0.005,0.01,
 listrpfull = np.loadtxt(path_swe,skiprows=36,unpack=True,usecols=(5))
 listrpfull = np.delete(listrpfull, np.arange(17, listrpfull.size, 18))
 
+mask = listrpfull == -1.0
+listrpfull[mask] == np.inf
+
 listrpfull_m = listrpfull[0:int(len(listrpfull)/2)]
 listrpfull_g = listrpfull[int(len(listrpfull)/2):]
 
@@ -82,8 +85,8 @@ swe_dim_teq = np.array(swe_teqs)
 swe_dim_mass = np.array(swe_masses)
 swe_dim_age = swe_ages
 
-swe_data_radius_m = np.reshape(listrpfull_m,(12,3,20,17))
-swe_data_radius_g = np.reshape(listrpfull_g,(12,3,20,17))
+swe_data_radius_m = np.reshape(listrpfull_m,(12,7,20,17))
+swe_data_radius_g = np.reshape(listrpfull_g,(12,7,20,17))
 
 fill_value = np.nan
 interp_swe_m = RegularGridInterpolator((swe_dim_wmf, swe_dim_teq, swe_dim_mass, swe_dim_age), swe_data_radius_m, method='slinear', bounds_error=False, fill_value=fill_value)
@@ -126,64 +129,29 @@ dim_teq_t24 = 278.0*(dim_finc_t24)**(0.25)
 dim_mass_t24= np.array([1,2,3,4,5,6,8,10,13,16,20])
 dim_fenv_t24= np.array([0.10,0.20,0.50,1,2,5,10,20])
 dim_top_t24 = np.array([0,1,2])
-t24_atm_top = ['RCB', '20 mbar', '1 nbar']
+t24_labels = ["RCB", "20 mbar", "1 nbar"]
 
-t24_data_radius_rcb = np.zeros((2,3,4,11,8))
-t24_data_radius_mbar = np.zeros((2,3,4,11,8))
-t24_data_radius_nbar = np.zeros((2,3,4,11,8))
-t24_data_radius_errc = np.zeros((2,3,4,11,8))
+t24_data_radius = np.zeros((3,2,3,4,11,8))
 
 data0 = np.genfromtxt(path_models+"Tang2024.dat",filling_values=fill_value,comments='#',skip_header=1,usecols=(5,6,7,8))
-t24_data_radius_rcb[:,:,:,:,:] = data0[:,0].reshape(2,3,4,11,8)
-t24_data_radius_mbar[:,:,:,:,:] = data0[:,1].reshape(2,3,4,11,8)
-t24_data_radius_nbar[:,:,:,:,:] = data0[:,2].reshape(2,3,4,11,8)
-t24_data_radius_errc[:,:,:,:,:] = data0[:,3].reshape(2,3,4,11,8)
+t24_data_radius[0,:,:,:,:,:] = data0[:,0].reshape(2,3,4,11,8)
+t24_data_radius[1,:,:,:,:,:] = data0[:,1].reshape(2,3,4,11,8)
+t24_data_radius[2,:,:,:,:,:] = data0[:,2].reshape(2,3,4,11,8)
 
-interp_t24_rcb = RegularGridInterpolator((dim_met_t24, dim_age_t24, dim_teq_t24, dim_mass_t24, dim_fenv_t24), t24_data_radius_rcb, method='linear', bounds_error=False, fill_value=fill_value)
-interp_t24_mbar = RegularGridInterpolator((dim_met_t24, dim_age_t24, dim_teq_t24, dim_mass_t24, dim_fenv_t24), t24_data_radius_mbar, method='linear', bounds_error=False, fill_value=fill_value)
-interp_t24_nbar = RegularGridInterpolator((dim_met_t24, dim_age_t24, dim_teq_t24, dim_mass_t24, dim_fenv_t24), t24_data_radius_nbar, method='linear', bounds_error=False, fill_value=fill_value)
-interp_t24_errc = RegularGridInterpolator((dim_met_t24, dim_age_t24, dim_teq_t24, dim_mass_t24, dim_fenv_t24), t24_data_radius_errc, method='linear', bounds_error=False, fill_value=fill_value)
-
-t24_data_radius_rcb_ext = np.zeros((2,3,4,11,9))
-t24_data_radius_mbar_ext = np.zeros((2,3,4,11,9))
-t24_data_radius_nbar_ext = np.zeros((2,3,4,11,9))
-t24_data_radius_errc_ext = np.zeros((2,3,4,11,9))
-
-t24_data_radius_rcb_ext[:,:,:,:,1:] = t24_data_radius_rcb[:,:,:,:,:]
-t24_data_radius_mbar_ext[:,:,:,:,1:] = t24_data_radius_mbar[:,:,:,:,:]
-t24_data_radius_nbar_ext[:,:,:,:,1:] = t24_data_radius_nbar[:,:,:,:,:]
-t24_data_radius_errc_ext[:,:,:,:,1:] = t24_data_radius_errc[:,:,:,:,:]
-
-t24_data_radius_rcb_ext[:,:,:,:,0] = np.interp(dim_mass_t24, list_zeng_ea_m, list_zeng_ea_r)
-t24_data_radius_mbar_ext[:,:,:,:,0] = np.interp(dim_mass_t24, list_zeng_ea_m, list_zeng_ea_r)
-t24_data_radius_nbar_ext[:,:,:,:,0] = np.interp(dim_mass_t24, list_zeng_ea_m, list_zeng_ea_r)
-t24_data_radius_errc_ext[:,:,:,:,0] = np.interp(dim_mass_t24, list_zeng_ea_m, list_zeng_ea_r)
-
-extrap_t24_rcb = RegularGridInterpolator((dim_met_t24, dim_age_t24, dim_teq_t24, dim_mass_t24, np.append(0.0,dim_fenv_t24)), t24_data_radius_rcb_ext, method='linear', bounds_error=False, fill_value=None)
-extrap_t24_mbar = RegularGridInterpolator((dim_met_t24, dim_age_t24, dim_teq_t24, dim_mass_t24, np.append(0.0,dim_fenv_t24)), t24_data_radius_mbar_ext, method='linear', bounds_error=False, fill_value=None)
-extrap_t24_nbar = RegularGridInterpolator((dim_met_t24, dim_age_t24, dim_teq_t24, dim_mass_t24, np.append(0.0,dim_fenv_t24)), t24_data_radius_nbar_ext, method='linear', bounds_error=False, fill_value=None)
-extrap_t24_errc = RegularGridInterpolator((dim_met_t24, dim_age_t24, dim_teq_t24, dim_mass_t24, np.append(0.0,dim_fenv_t24)), t24_data_radius_errc_ext, method='linear', bounds_error=False, fill_value=None)
+interp_t24 = RegularGridInterpolator((dim_top_t24,dim_met_t24, dim_age_t24, dim_teq_t24, dim_mass_t24, dim_fenv_t24), t24_data_radius, method='linear', bounds_error=False, fill_value=fill_value)
 
 # Make the boil-off limit
 t24_bolim_fenv = np.zeros((2,8,11))
 t24_bolim_radius = np.zeros((3,2,8,11))
-convertfunc = lambda x: float(x.strip(b'%'))
-data3 = np.genfromtxt(path_models+"T24_grids/boil-off.csv",delimiter=",",filling_values=20.0,comments='#',skip_header=0,converters={i: convertfunc for i in range(12)})
+data3 = np.genfromtxt(path_models+"T24_grids/boil-off.csv",delimiter=",",filling_values=20.0,comments='#',skip_header=0)
 data3 = data3[:,:12]
 t24_bolim_fenv = data3[:,1:].reshape(2,8,11)
 t24_bolim_fenv = np.clip(t24_bolim_fenv,a_min=0.0,a_max=20)
 
 dim_finc_t24_bolim= np.array([1.0,3.0,10.0,30.0,100.0,300.0,1000.0,3000.0])
 dim_teq_t24_bolim = 278.0*(dim_finc_t24_bolim)**(0.25)
-bolim_met,bolim_teq,bolim_mass = np.meshgrid(dim_met_t24,dim_teq_t24_bolim,dim_mass_t24, indexing='ij')
 
-t24_bolim_radius = np.array((
-    extrap_t24_rcb((bolim_met,np.full_like(bolim_met, np.log10(0.10001)),bolim_teq,bolim_mass,t24_bolim_fenv)),
-    extrap_t24_mbar((bolim_met,np.full_like(bolim_met, np.log10(0.10001)),bolim_teq,bolim_mass,t24_bolim_fenv)),
-    extrap_t24_nbar((bolim_met,np.full_like(bolim_met, np.log10(0.10001)),bolim_teq,bolim_mass,t24_bolim_fenv))
-)).reshape(3,2,8,11)
-
-interp_t24_bolim = RegularGridInterpolator((dim_top_t24,dim_met_t24, dim_teq_t24_bolim, dim_mass_t24), t24_bolim_radius, method='linear', bounds_error=False, fill_value=np.inf)
+interp_t24_bolim_maxf = RegularGridInterpolator((dim_met_t24, dim_teq_t24_bolim, dim_mass_t24), t24_bolim_fenv, method='linear', bounds_error=False, fill_value=np.inf)
 
 ##############################################
 #
@@ -368,41 +336,17 @@ def rad_swe_g(x,wmf_swe,teq_swe,age_swe):
 swe_func = [rad_swe_m, rad_swe_g]
 swe_labels = ["Type M", "Type G"]  # Optional labels for each 
 
-t24_tolerance_main = 0.001
-t24_tolerance_sec = 2
-def rad_t24_rcb(x,met,age,teq,fenv,tolerance=t24_tolerance_sec):
+t24_tolerance_main = 1.0
+t24_tolerance_sec = 0.0
+def rad_t24(x,top,met,age,teq,fenv,tolerance=t24_tolerance_sec):
     logage = np.log10(age)
-    input0 = np.stack((np.full(len(x),met),np.full(len(x),logage),np.full(len(x),teq),x,np.full(len(x),fenv)), axis=-1)
-    rp = interp_t24_rcb(input0)
-    error = interp_t24_errc(input0)
-    isbad = error >= tolerance
+    input0 = np.stack((np.full(len(x),top),np.full(len(x),met),np.full(len(x),logage),np.full(len(x),teq),x,np.full(len(x),fenv)), axis=-1)
+    rp = interp_t24(input0)
+    input1 = np.stack((np.full(len(x),met),np.full(len(x),teq),x), axis=-1)
+    boiloff_maxf = interp_t24_bolim_maxf(input1)
+    isbad = np.full(len(x),fenv)*tolerance > boiloff_maxf
     rp[isbad] = np.nan
     return rp
-
-def rad_t24_mbar(x,met,age,teq,fenv,tolerance=t24_tolerance_sec):
-    logage = np.log10(age)
-    input0 = np.stack((np.full(len(x),met),np.full(len(x),logage),np.full(len(x),teq),x,np.full(len(x),fenv)), axis=-1)
-    rp = interp_t24_mbar(input0)
-    error = interp_t24_errc(input0)
-    isbad = error >= tolerance
-    rp[isbad] = np.nan
-    return rp
-
-def rad_t24_nbar(x,met,age,teq,fenv,tolerance=t24_tolerance_sec):
-    logage = np.log10(age)
-    input0 = np.stack((np.full(len(x),met),np.full(len(x),logage),np.full(len(x),teq),x,np.full(len(x),fenv)), axis=-1)
-    rp = interp_t24_nbar(input0)
-    error = interp_t24_errc(input0)
-    isbad = error >= tolerance
-    rp[isbad] = np.nan
-    return rp
-
-t24_func = [rad_t24_rcb, rad_t24_mbar, rad_t24_nbar]
-t24_labels = ["RCB", "20 mbar", "1 nbar"]  # Optional labels for each 
-
-def rad_lim_t24(x,top,met,teq):
-    input0 = np.stack((np.full(len(x),top),np.full(len(x),met),np.full(len(x),teq),x), axis=-1)
-    return interp_t24_bolim(input0)
 
 def rad_zeng(x,cmf):
     input0 = np.stack((x,np.full(len(x),cmf)), axis=-1)
@@ -412,7 +356,7 @@ def rad_zeng(x,cmf):
 
 
 ## Plot parameters
-xmin, xmax, nx = 0.5, 30.0, 100
+xmin, xmax, nx = 0.5, 30.0, 200
 ymin, ymax     = 0.5, 4.5
 
 x = np.logspace(np.log10(xmin), np.log10(xmax), nx)
@@ -428,7 +372,7 @@ init_met_t24 = 1.0
 init_age_t24 = 1.0
 init_teq_t24 = 600.0
 init_fenv_t24 = 1.0
-init_top_t24 = 0
+init_top_t24 = 1.0
 
 init_cmf_zeng = 0.325
 
@@ -449,17 +393,16 @@ ax.grid(visible=True,which='major', axis='both')
 # Sliding lines
 current_swe = swe_func[init_host_swe](x,init_wmf_swe,init_teq_swe,init_age_swe)
 line_swe, = ax.plot(x, current_swe,lw=2,color='blue',ls='-',zorder=20)
-current_t24 = t24_func[init_top_t24](x,init_met_t24,init_age_t24,init_teq_t24,init_fenv_t24,tolerance=t24_tolerance_main)
+current_t24 = rad_t24(x,init_top_t24,init_met_t24,init_age_t24,init_teq_t24,init_fenv_t24,tolerance=t24_tolerance_main)
 line_t24, = ax.plot(x, current_t24,lw=2,color='red',zorder=30)
-line_t24_lim, = ax.plot(x, rad_lim_t24(x,init_top_t24,init_met_t24,init_teq_t24),lw=0.5,ls='-',color='red',zorder=25)
 line_zeng, = ax.plot(x, rad_zeng(x,init_cmf_zeng),lw=2,color='brown',zorder=10)
 
 # Minor lines
 line_swe_m, = ax.plot(x, rad_swe_m(x,init_wmf_swe,init_teq_swe,init_age_swe),lw=0.5,color='blue',ls='--',zorder=19)
 line_swe_g, = ax.plot(x, rad_swe_g(x,init_wmf_swe,init_teq_swe,init_age_swe),lw=0.5,color='blue',ls='--',zorder=19)
-line_t24_rcb, = ax.plot(x, rad_t24_rcb(x,init_met_t24,init_age_t24,init_teq_t24,init_fenv_t24),lw=0.5,ls='--',color='red',zorder=29)
-line_t24_mbar, = ax.plot(x, rad_t24_mbar(x,init_met_t24,init_age_t24,init_teq_t24,init_fenv_t24),lw=0.5,ls='--',color='red',zorder=29)
-line_t24_nbar, = ax.plot(x, rad_t24_nbar(x,init_met_t24,init_age_t24,init_teq_t24,init_fenv_t24),lw=0.5,ls='--',color='red',zorder=29)
+line_t24_rcb, = ax.plot(x, rad_t24(x,0,init_met_t24,init_age_t24,init_teq_t24,init_fenv_t24),lw=0.5,ls='--',color='red',zorder=29)
+line_t24_mbar, = ax.plot(x, rad_t24(x,1,init_met_t24,init_age_t24,init_teq_t24,init_fenv_t24),lw=0.5,ls='--',color='red',zorder=29)
+line_t24_nbar, = ax.plot(x, rad_t24(x,2,init_met_t24,init_age_t24,init_teq_t24,init_fenv_t24),lw=0.5,ls='--',color='red',zorder=29)
 
 
 # Planets
@@ -570,11 +513,6 @@ ax.text(0.55, 1.10, '50% Liquid H2O',fontsize=5,
 ax.text(0.55, 1.23, '100% Liquid H2O',fontsize=5,
         color='blue',rotation=17)
 
-# Annotate the boil-off line
-angle_boiloff = np.degrees(np.arctan2(rad_lim_t24([1.5],init_top_t24,init_met_t24,init_teq_t24).item(0) - rad_lim_t24([1],init_top_t24,init_met_t24,init_teq_t24).item(0), 1.5-1))
-annotate_boiloff = ax.text(1, rad_lim_t24([1],init_top_t24,init_met_t24,init_teq_t24).item(0)+0.08, 'Boil-off limit',fontsize=5,
-        color='red',rotation=angle_boiloff)
-
 ##############################################
 #
 #   MAKE SLIDERS
@@ -625,8 +563,8 @@ ax_teq_swe = fig.add_axes([0.08, 0.80, 0.15, 0.02])  # [left, bottom, width, hei
 teq_swe_slider = Slider(
     ax=ax_teq_swe,
     label=r"T$_{\mathrm{eq}}$  ",
-    valmin=500.0,
-    valmax=700.0,
+    valmin=400.0,
+    valmax=1500.0,
     valinit=init_teq_swe,
     valfmt=' %4.0f K'
 )
@@ -783,18 +721,12 @@ def update(val):
 
     func_t24_index = int(top_t24_slider.val)
     top_t24_slider.valtext.set_text(t24_labels[func_t24_index])
-    current_t24 = t24_func[func_t24_index](x,met_t24_slider.val,age_t24_linear,teq_t24_slider.val,fenv_t24_linear,tolerance=t24_tolerance_main)
+    current_t24 = rad_t24(x,func_t24_index,met_t24_slider.val,age_t24_linear,teq_t24_slider.val,fenv_t24_linear,tolerance=t24_tolerance_main)
     line_t24.set_ydata(current_t24)
-    line_t24_lim.set_ydata(rad_lim_t24(x,top_t24_slider.val,met_t24_slider.val,teq_t24_slider.val))
 
-    line_t24_rcb.set_ydata(rad_t24_rcb(x,met_t24_slider.val,age_t24_linear,teq_t24_slider.val,fenv_t24_linear))
-    line_t24_mbar.set_ydata(rad_t24_mbar(x,met_t24_slider.val,age_t24_linear,teq_t24_slider.val,fenv_t24_linear))
-    line_t24_nbar.set_ydata(rad_t24_nbar(x,met_t24_slider.val,age_t24_linear,teq_t24_slider.val,fenv_t24_linear))
-
-    # Update annotation boil-off
-    angle_boiloff = np.degrees(np.arctan2(rad_lim_t24([1.5],top_t24_slider.val,met_t24_slider.val,teq_t24_slider.val).item(0) - rad_lim_t24([1],top_t24_slider.val,met_t24_slider.val,teq_t24_slider.val).item(0), 1.5-1))
-    annotate_boiloff.set_position((1, rad_lim_t24([1],top_t24_slider.val,met_t24_slider.val,teq_t24_slider.val).item(0)+0.08))
-    annotate_boiloff.set_rotation(angle_boiloff)
+    line_t24_rcb.set_ydata(rad_t24(x,0,met_t24_slider.val,age_t24_linear,teq_t24_slider.val,fenv_t24_linear))
+    line_t24_mbar.set_ydata(rad_t24(x,1,met_t24_slider.val,age_t24_linear,teq_t24_slider.val,fenv_t24_linear))
+    line_t24_nbar.set_ydata(rad_t24(x,2,met_t24_slider.val,age_t24_linear,teq_t24_slider.val,fenv_t24_linear))
 
     # Update Zeng
     line_zeng.set_ydata(rad_zeng(x, cmf_zeng_slider.val))
