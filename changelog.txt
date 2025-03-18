@@ -166,3 +166,16 @@ Date: 2025/2/11
 
 Changes:
 1. Abandonned the boil-off curve, and clean-up.
+
+#####################################################
+v2.3.1
+Author: Artyom (Artem) Aguichine
+Date: 2025/3/17
+
+Changes:
+1. Final version of the SWE model (Aguichine+2025), which
+   gives the radius at 20 mbar and 1 microbar.
+
+2. The T24 model has been extrapolated beyond boil-off 
+   to provide an approximate shape of mass-radius relations
+   beyond the boil-off limit.
