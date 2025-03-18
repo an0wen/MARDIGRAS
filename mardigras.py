@@ -53,10 +53,13 @@ zeng_mass,zeng_purefe,zeng_rock,zeng_50wat,zeng_100wat,zeng_earth = np.loadtxt(p
 #
 ##############################################
 
-path_swe = path_models + "A24_SWE_all_v3.dat"
+path_swe = path_models + "A25_SWE_all.dat"
 
-swe_host_stars = ['M', 'G']
-swe_teqs = [400, 500, 700, 900, 1100, 1300, 1500]
+swe_top = np.array([0,1])
+swe_labels_top = ["20 mbar", "1 µbar"]
+swe_labels_host = ["Type M", "Type G"]
+# swe_teqs = [400, 500, 700, 900, 1100, 1300, 1500]
+swe_teqs = [500, 600, 700]
 swe_wmfs = [0.1,1,10,20,30,40,50,60,70,80,90,100]  # 12 water mass fractions from 0.05 to 0.60
 swe_masses = [0.2       ,  0.254855  ,  0.32475535,  0.41382762,  0.52733018,
         0.67196366,  0.85626648,  1.09111896,  1.39038559,  1.77173358,
@@ -69,14 +72,16 @@ swe_ages = np.array([0.001,0.0015,0.002,0.003,0.005,0.01,
                         1.0,2.0,5.0,
                         10,20])
 
-listrpfull = np.loadtxt(path_swe,skiprows=36,unpack=True,usecols=(5))
+listrpfull1 = np.loadtxt(path_swe,skiprows=36,unpack=True,usecols=(6))
+listrpfull2 = np.loadtxt(path_swe,skiprows=36,unpack=True,usecols=(7))
+listrpfull = np.array((listrpfull1,listrpfull2))
 listrpfull = np.delete(listrpfull, np.arange(17, listrpfull.size, 18))
 
-mask = listrpfull == -1.0
-listrpfull[mask] == np.inf
+# mask = listrpfull == -1.0
+# listrpfull[mask] == np.inf
 
-listrpfull_m = listrpfull[0:int(len(listrpfull)/2)]
-listrpfull_g = listrpfull[int(len(listrpfull)/2):]
+# listrpfull_m = listrpfull[0:int(len(listrpfull)/2)]
+# listrpfull_g = listrpfull[int(len(listrpfull)/2):]
 
 # Make SWE interpolator
 
@@ -84,13 +89,21 @@ swe_dim_wmf = np.array(swe_wmfs)/100
 swe_dim_teq = np.array(swe_teqs)
 swe_dim_mass = np.array(swe_masses)
 swe_dim_age = swe_ages
+swe_dim_star = np.array([0,1])
+swe_dim_top = np.array([0,1])
 
-swe_data_radius_m = np.reshape(listrpfull_m,(12,7,20,17))
-swe_data_radius_g = np.reshape(listrpfull_g,(12,7,20,17))
+swe_data_radius = np.reshape(listrpfull,(2,2,12,3,20,17))
+# swe_data_radius_g = np.reshape(listrpfull_g,(12,7,20,17))
 
 fill_value = np.nan
-interp_swe_m = RegularGridInterpolator((swe_dim_wmf, swe_dim_teq, swe_dim_mass, swe_dim_age), swe_data_radius_m, method='slinear', bounds_error=False, fill_value=fill_value)
-interp_swe_g = RegularGridInterpolator((swe_dim_wmf, swe_dim_teq, swe_dim_mass, swe_dim_age), swe_data_radius_g, method='slinear', bounds_error=False, fill_value=fill_value)
+interp_swe = RegularGridInterpolator((swe_dim_top,
+                                      swe_dim_star,
+                                      swe_dim_wmf,
+                                      swe_dim_teq,
+                                      swe_dim_mass,
+                                      swe_dim_age), 
+                                     swe_data_radius, method='slinear', bounds_error=False, fill_value=fill_value)
+# interp_swe_g = RegularGridInterpolator((swe_dim_wmf, swe_dim_teq, swe_dim_mass, swe_dim_age), swe_data_radius_g, method='slinear', bounds_error=False, fill_value=fill_value)
 
 ##############################################
 #
@@ -325,22 +338,32 @@ ss_symbols = [ss_alchemy_symbols[planet] for planet in ss_planets]
 ##############################################
 
 # The parametrized function to be plotted
-def rad_swe_m(x,wmf_swe,teq_swe,age_swe):
-    input0 = np.stack((np.full(len(x),wmf_swe),np.full(len(x),teq_swe),x,np.full(len(x),age_swe)), axis=-1)
-    return interp_swe_m(input0)
+def rad_swe(x,top_swe,star_swe,wmf_swe,teq_swe,age_swe):
+    input0 = np.stack((np.full(len(x),top_swe),
+                       np.full(len(x),star_swe),
+                       np.full(len(x),wmf_swe),
+                       np.full(len(x),teq_swe),
+                       x,
+                       np.full(len(x),age_swe)), axis=-1)
+    return interp_swe(input0)
 
-def rad_swe_g(x,wmf_swe,teq_swe,age_swe):
-    input0 = np.stack((np.full(len(x),wmf_swe),np.full(len(x),teq_swe),x,np.full(len(x),age_swe)), axis=-1)
-    return interp_swe_g(input0)
+# def rad_swe_g(x,wmf_swe,teq_swe,age_swe):
+#     input0 = np.stack((np.full(len(x),wmf_swe),np.full(len(x),teq_swe),x,np.full(len(x),age_swe)), axis=-1)
+#     return interp_swe_g(input0)
 
-swe_func = [rad_swe_m, rad_swe_g]
-swe_labels = ["Type M", "Type G"]  # Optional labels for each 
+# swe_func = [rad_swe_m, rad_swe_g]
+# swe_labels = ["Type M", "Type G"]  # Optional labels for each 
 
 t24_tolerance_main = 1.0
 t24_tolerance_sec = 0.0
 def rad_t24(x,top,met,age,teq,fenv,tolerance=t24_tolerance_sec):
     logage = np.log10(age)
-    input0 = np.stack((np.full(len(x),top),np.full(len(x),met),np.full(len(x),logage),np.full(len(x),teq),x,np.full(len(x),fenv)), axis=-1)
+    input0 = np.stack((np.full(len(x),top),
+                       np.full(len(x),met),
+                       np.full(len(x),logage),
+                       np.full(len(x),teq),
+                       x,
+                       np.full(len(x),fenv)), axis=-1)
     rp = interp_t24(input0)
     input1 = np.stack((np.full(len(x),met),np.full(len(x),teq),x), axis=-1)
     boiloff_maxf = interp_t24_bolim_maxf(input1)
@@ -363,6 +386,7 @@ x = np.logspace(np.log10(xmin), np.log10(xmax), nx)
 
 # Define initial parameters
 init_host_swe = 0
+init_top_swe = 1
 init_wmf_swe = 0.5
 init_teq_swe = 600.0
 init_age_swe = 1.0
@@ -391,15 +415,15 @@ ax.set_ylabel('Radius [Re]')
 ax.grid(visible=True,which='major', axis='both')
 
 # Sliding lines
-current_swe = swe_func[init_host_swe](x,init_wmf_swe,init_teq_swe,init_age_swe)
+current_swe = rad_swe(x,init_top_swe,init_host_swe,init_wmf_swe,init_teq_swe,init_age_swe)
 line_swe, = ax.plot(x, current_swe,lw=2,color='blue',ls='-',zorder=20)
 current_t24 = rad_t24(x,init_top_t24,init_met_t24,init_age_t24,init_teq_t24,init_fenv_t24,tolerance=t24_tolerance_main)
 line_t24, = ax.plot(x, current_t24,lw=2,color='red',zorder=30)
 line_zeng, = ax.plot(x, rad_zeng(x,init_cmf_zeng),lw=2,color='brown',zorder=10)
 
 # Minor lines
-line_swe_m, = ax.plot(x, rad_swe_m(x,init_wmf_swe,init_teq_swe,init_age_swe),lw=0.5,color='blue',ls='--',zorder=19)
-line_swe_g, = ax.plot(x, rad_swe_g(x,init_wmf_swe,init_teq_swe,init_age_swe),lw=0.5,color='blue',ls='--',zorder=19)
+line_swe_mbar, = ax.plot(x, rad_swe(x,0,init_host_swe,init_wmf_swe,init_teq_swe,init_age_swe),lw=0.5,color='blue',ls='--',zorder=19)
+line_swe_mibar, = ax.plot(x, rad_swe(x,1,init_host_swe,init_wmf_swe,init_teq_swe,init_age_swe),lw=0.5,color='blue',ls='--',zorder=19)
 line_t24_rcb, = ax.plot(x, rad_t24(x,0,init_met_t24,init_age_t24,init_teq_t24,init_fenv_t24),lw=0.5,ls='--',color='red',zorder=29)
 line_t24_mbar, = ax.plot(x, rad_t24(x,1,init_met_t24,init_age_t24,init_teq_t24,init_fenv_t24),lw=0.5,ls='--',color='red',zorder=29)
 line_t24_nbar, = ax.plot(x, rad_t24(x,2,init_met_t24,init_age_t24,init_teq_t24,init_fenv_t24),lw=0.5,ls='--',color='red',zorder=29)
@@ -522,7 +546,7 @@ ax.text(0.55, 1.23, '100% Liquid H2O',fontsize=5,
 # Aguichine+2024 Slider
 
 # Label
-fig.text(0.05, 0.95, 'Aguichine et al. 2024',weight='bold',
+fig.text(0.05, 0.95, 'Aguichine et al. 2025',weight='bold',
         color='blue',
         bbox={'ec': 'white', 'fc':'white','color':'blue', 'pad': 10})
 
@@ -539,8 +563,8 @@ host_swe_slider = Slider(
 host_swe_slider.label.set_ha('left')
 host_swe_slider.label.set_position((-0.4, 0.5))
 host_swe_slider.valtext.set_ha('right')
-host_swe_slider.valtext.set_position((1.6, 0.5))  # Shift text to the right outside the slider
-host_swe_slider.valtext.set_text(swe_labels[init_host_swe])
+host_swe_slider.valtext.set_position((1.53, 0.5))  # Shift text to the right outside the slider
+host_swe_slider.valtext.set_text(swe_labels_host[init_host_swe])
 
 # Make a horizontal oriented slider to control the WMF
 ax_wmf_swe = fig.add_axes([0.08, 0.75, 0.15, 0.02])  # [left, bottom, width, height]
@@ -556,22 +580,22 @@ wmf_swe_slider.label.set_ha('left')
 wmf_swe_slider.label.set_position((-0.4, 0.5))
 wmf_swe_slider.valtext.set_text(f'{init_wmf_swe*100:#.3g} %')
 wmf_swe_slider.valtext.set_ha('right')
-wmf_swe_slider.valtext.set_position((1.6, 0.5))  # Shift text to the right outside the slider
+wmf_swe_slider.valtext.set_position((1.53, 0.5))  # Shift text to the right outside the slider
 
 # Make a horizontal oriented slider to control the Teq
 ax_teq_swe = fig.add_axes([0.08, 0.80, 0.15, 0.02])  # [left, bottom, width, height]
 teq_swe_slider = Slider(
     ax=ax_teq_swe,
     label=r"T$_{\mathrm{eq}}$  ",
-    valmin=400.0,
-    valmax=1500.0,
+    valmin=500.0,
+    valmax=700.0,
     valinit=init_teq_swe,
     valfmt=' %4.0f K'
 )
 teq_swe_slider.label.set_ha('left')
 teq_swe_slider.label.set_position((-0.4, 0.5))
 teq_swe_slider.valtext.set_ha('right')
-teq_swe_slider.valtext.set_position((1.6, 0.5))  # Shift text to the right outside the slider
+teq_swe_slider.valtext.set_position((1.53, 0.5))  # Shift text to the right outside the slider
 
 # Make a horizontal oriented slider to control the Teq
 ax_age_swe = fig.add_axes([0.08, 0.85, 0.15, 0.02])  # [left, bottom, width, height]
@@ -587,7 +611,25 @@ age_swe_slider.label.set_ha('left')
 age_swe_slider.label.set_position((-0.4, 0.5))
 age_swe_slider.valtext.set_text(f'{init_age_swe:#.3g} Gyr')
 age_swe_slider.valtext.set_ha('right')
-age_swe_slider.valtext.set_position((1.7, 0.5))  # Shift text to the right outside the slider
+age_swe_slider.valtext.set_position((1.63, 0.5))  # Shift text to the right outside the slider
+
+# Make a horizontal oriented slider to control the Top of the Atmosphere
+ax_top_swe = fig.add_axes([0.08, 0.71, 0.15, 0.02])  # [left, bottom, width, height]
+top_swe_slider = Slider(
+    ax=ax_top_swe,
+    label="Atm top  ",
+    valmin=0,
+    valmax=1,
+    valinit=init_top_swe,
+    valstep=1
+)
+top_swe_slider.label.set_ha('left')
+top_swe_slider.label.set_position((-0.5, 0.5))
+top_swe_slider.label.set_size(9)
+top_swe_slider.valtext.set_ha('right')
+top_swe_slider.valtext.set_position((1.53, 0.5))  # Shift text to the right outside the slider
+top_swe_slider.valtext.set_text(swe_labels_top[init_top_swe])
+
 
 # Tang et al. 2024 Slider
 
@@ -672,7 +714,8 @@ top_t24_slider = Slider(
     valstep=1
 )
 top_t24_slider.label.set_ha('left')
-top_t24_slider.label.set_position((-0.6, 0.5))
+top_t24_slider.label.set_position((-0.5, 0.5))
+top_t24_slider.label.set_size(9)
 top_t24_slider.valtext.set_ha('right')
 top_t24_slider.valtext.set_position((1.65, 0.5))  # Shift text to the right outside the slider
 
@@ -703,14 +746,15 @@ def update(val):
     age_linear_swe = 10**age_swe_slider.val
     age_swe_slider.valtext.set_text(f'{age_linear_swe:#.3g} Gyr')  # Update displayed value
 
-    func_swe_index = int(host_swe_slider.val)
-    host_swe_slider.valtext.set_text(swe_labels[func_swe_index])
-    current_swe = swe_func[func_swe_index](x,wmf_swe_linear,teq_swe_slider.val,age_linear_swe)
+    host_swe_index = int(host_swe_slider.val)
+    host_swe_slider.valtext.set_text(swe_labels_host[host_swe_index])
+    top_swe_index = int(top_swe_slider.val)
+    top_swe_slider.valtext.set_text(swe_labels_top[top_swe_index])
+    current_swe = rad_swe(x,top_swe_index,host_swe_index,wmf_swe_linear,teq_swe_slider.val,age_linear_swe)
     line_swe.set_ydata(current_swe)
 
-    line_swe_m.set_ydata(rad_swe_m(x,wmf_swe_linear,teq_swe_slider.val,age_linear_swe))
-    line_swe_g.set_ydata(rad_swe_g(x,wmf_swe_linear,teq_swe_slider.val,age_linear_swe))
-
+    line_swe_mbar.set_ydata(rad_swe(x,0,host_swe_index,wmf_swe_linear,teq_swe_slider.val,age_linear_swe))
+    line_swe_mibar.set_ydata(rad_swe(x,1,host_swe_index,wmf_swe_linear,teq_swe_slider.val,age_linear_swe))
 
     # Update T24
     age_t24_linear = 10**age_t24_slider.val
@@ -737,6 +781,7 @@ host_swe_slider.on_changed(update)
 wmf_swe_slider.on_changed(update)
 teq_swe_slider.on_changed(update)
 age_swe_slider.on_changed(update)
+top_swe_slider.on_changed(update)
 
 met_t24_slider.on_changed(update)
 age_t24_slider.on_changed(update)
@@ -756,6 +801,7 @@ def reset(event):
     wmf_swe_slider.reset()
     teq_swe_slider.reset()
     age_swe_slider.reset()
+    top_swe_slider.reset()
 
     met_t24_slider.reset()
     age_t24_slider.reset()
