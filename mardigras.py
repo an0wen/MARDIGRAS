@@ -703,7 +703,7 @@ top_t24_slider.label.set_position((-0.5, 0.5))
 top_t24_slider.label.set_size(9)
 top_t24_slider.valtext.set_ha('right')
 top_t24_slider.valtext.set_position((1.65, 0.5))  # Shift text to the right outside the slider
-top_t24_slider.valtext.set_text(t24_labels[init_top_t24])
+top_t24_slider.valtext.set_text(t24_labels[int(init_top_t24)])
 
 # Zeng+2016 Slider
 
