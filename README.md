@@ -11,7 +11,7 @@ git clone https://github.com/an0wen/MARDIGRAS
 cd MARDIGRAS
 python3 mardigras.py
 ```
-<img width="400" alt="Capture d’écran 2024-12-19 à 16 40 53" src="https://github.com/user-attachments/assets/35ae5787-9eca-49b1-981c-179a27d6c515" />
+<img width="400" alt="Capture d’écran 2024-12-19 à 16 40 53" src="https://github.com/user-attachments/assets/75dd201c-3485-4aaf-83b8-9b953a878be2" />
 <br/>
 <br/>
 
@@ -28,11 +28,11 @@ python3 mardigras.py
 
 ### Contents of v2
 Three curves are controlled by sliders:
-1. Aguichine et al. 2024 (submitted): Represents an envelope of pure water in a supercritical state, with a pure steam atmosphere on top.
+1. Aguichine et al. 2025 (in review, https://arxiv.org/abs/2412.17945): Represents an envelope of pure water in a supercritical state, with a pure steam atmosphere on top.
 2. Tang et al. 2024 (https://ui.adsabs.harvard.edu/abs/2024ApJ...976..221T/abstract): Represents an H-He gas envelope with metallicity ranging from 1xSolar to 50xSolar.
 3. Zeng et al. 2016 (https://ui.adsabs.harvard.edu/abs/2016ApJ...819..127Z/abstract): For terrestrial planets with variable (iron) core mass fractions.
 
-Blue dashed lines show the Aguichine et al. 2024 model for M and G type host star.
+Blue dashed lines show the Aguichine et al. 2025 model for different cloud pressure levels: 20 mbar, and 1 µbar.
 Red dashed lines show the Tang et al. 2024 model for different cloud pressure levels: RCB, 20 mbar, and 1 nbar.
 
 Additionally, five static profiles from Zeng et al. 2016 are shown, from bottom to top: pure iron core, Earth-like composition, pure mantle, 50% liquid water, and 100% liquid water.
