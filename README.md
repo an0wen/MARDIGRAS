@@ -11,7 +11,7 @@ git clone https://github.com/an0wen/MARDIGRAS
 cd MARDIGRAS
 python3 mardigras.py
 ```
-<img width="400" alt="Capture d’écran 2024-12-19 à 16 40 53" src="https://github.com/user-attachments/assets/75dd201c-3485-4aaf-83b8-9b953a878be2" />
+<img width="400" alt="Capture d’écran 2024-12-19 à 16 40 53" src="https://github.com/user-attachments/assets/5b125d86-712b-4fba-a89a-afa08e008169" />
 <br/>
 <br/>
 
