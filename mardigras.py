@@ -1,6 +1,6 @@
 ##############################################
 #
-#   READ FIT COEFFICIENTS
+#   Mass-Radius DIaGRAm with Sliders (MARDIGRAS)
 #
 ##############################################
 
@@ -44,49 +44,71 @@ path_aguichine = path_models + "Aguichine2021_fit_coefficients_2024.dat"
 path_zeng = path_models + "Zeng2016.dat"
 
 
-# Load fit coefficients from Aguichine et al. 2021
-listcmf,listwmf,listteq,lista,listb,listd,listc,listmasslow,listmasshigh \
-    = np.loadtxt(path_aguichine,skiprows=19,unpack=True,usecols=(0,1,2,3,4,5,6,11,12))
-        
-def radius(mass,a,b,c,d):
-    return 10**(a*np.log10(mass) + np.exp(-d*(np.log10(mass)+c)) + b)
-
-
-
 # Load curves from Zeng et al. 2016
 zeng_mass,zeng_purefe,zeng_rock,zeng_50wat,zeng_100wat,zeng_earth = np.loadtxt(path_zeng,delimiter="\t",skiprows=1,unpack=True)
 
 
 ##############################################
 #
-#   MAKE IOP INTERPOLATOR
+#   MAKE SWE INTERPOLATOR (Aguichine+2024)
 #
 ##############################################
 
-dimcmf = np.linspace(0.0,0.9,10)
-dimwmf = np.linspace(0.1,1.0,10)
-dimteq = np.linspace(400.0,1300.0,10)
+path_swe = path_models + "A25_SWE_all.dat"
 
-data_a = np.reshape(lista,(10,10,10))
-data_b = np.reshape(listb,(10,10,10))
-data_c = np.reshape(listc,(10,10,10))
-data_d = np.reshape(listd,(10,10,10))
+swe_top = np.array([0,1])
+swe_labels_top = ["20 mbar", "1 µbar"]
+swe_labels_host = ["Type M", "Type G"]
+# swe_teqs = [400, 500, 700, 900, 1100, 1300, 1500]
+swe_teqs = [500, 600, 700]
+swe_wmfs = [0.1,1,10,20,30,40,50,60,70,80,90,100]  # 12 water mass fractions from 0.05 to 0.60
+swe_masses = [0.2       ,  0.254855  ,  0.32475535,  0.41382762,  0.52733018,
+        0.67196366,  0.85626648,  1.09111896,  1.39038559,  1.77173358,
+        2.25767578,  2.87689978,  3.66596142,  4.67144294,  5.95270288,
+        7.58538038,  9.66586048, 12.31696422, 15.69519941, 20.        ]  # 20 points in mass from 0.1 to 2.0
 
-data_masslimlow = np.reshape(listmasslow,(10,10,10))
-data_masslimhigh = np.reshape(listmasshigh,(10,10,10))
+swe_ages = np.array([0.001,0.0015,0.002,0.003,0.005,0.01,
+                        0.02,0.03,0.05,
+                        0.1,0.2,0.5,
+                        1.0,2.0,5.0,
+                        10,20])
 
-interp_a = RegularGridInterpolator((dimcmf, dimteq, dimwmf), data_a, method='cubic', bounds_error=False, fill_value=None)
-interp_b = RegularGridInterpolator((dimcmf, dimteq, dimwmf), data_b, method='cubic', bounds_error=False, fill_value=None)
-interp_c = RegularGridInterpolator((dimcmf, dimteq, dimwmf), data_c, method='cubic', bounds_error=False, fill_value=None)
-interp_d = RegularGridInterpolator((dimcmf, dimteq, dimwmf), data_d, method='cubic', bounds_error=False, fill_value=None)
+listrpfull1 = np.loadtxt(path_swe,skiprows=36,unpack=True,usecols=(6))
+listrpfull2 = np.loadtxt(path_swe,skiprows=36,unpack=True,usecols=(7))
+listrpfull = np.array((listrpfull1,listrpfull2))
+listrpfull = np.delete(listrpfull, np.arange(17, listrpfull.size, 18))
 
-interp_masslimlow = RegularGridInterpolator((dimcmf, dimteq, dimwmf), data_masslimlow, method='cubic', bounds_error=False, fill_value=None)
-interp_masslimhigh = RegularGridInterpolator((dimcmf, dimteq, dimwmf), data_masslimhigh, method='cubic', bounds_error=False, fill_value=None)
+# mask = listrpfull == -1.0
+# listrpfull[mask] == np.inf
 
+# listrpfull_m = listrpfull[0:int(len(listrpfull)/2)]
+# listrpfull_g = listrpfull[int(len(listrpfull)/2):]
+
+# Make SWE interpolator
+
+swe_dim_wmf = np.array(swe_wmfs)/100
+swe_dim_teq = np.array(swe_teqs)
+swe_dim_mass = np.array(swe_masses)
+swe_dim_age = swe_ages
+swe_dim_star = np.array([0,1])
+swe_dim_top = np.array([0,1])
+
+swe_data_radius = np.reshape(listrpfull,(2,2,12,3,20,17))
+# swe_data_radius_g = np.reshape(listrpfull_g,(12,7,20,17))
+
+fill_value = np.nan
+interp_swe = RegularGridInterpolator((swe_dim_top,
+                                      swe_dim_star,
+                                      swe_dim_wmf,
+                                      swe_dim_teq,
+                                      swe_dim_mass,
+                                      swe_dim_age), 
+                                     swe_data_radius, method='slinear', bounds_error=False, fill_value=fill_value)
+# interp_swe_g = RegularGridInterpolator((swe_dim_wmf, swe_dim_teq, swe_dim_mass, swe_dim_age), swe_data_radius_g, method='slinear', bounds_error=False, fill_value=fill_value)
 
 ##############################################
 #
-#   MAKE ZENG INTERPOLATOR
+#   MAKE ZENG INTERPOLATOR (Zeng+2016)
 #
 ##############################################
 
@@ -105,32 +127,45 @@ list_zeng_mg_radii = np.interp(list_zeng_masses, list_zeng_mg_m, list_zeng_mg_r)
 # create interpolator
 dimcmf_zeng = np.array([0.0,0.325,1.0])
 data_zeng = np.vstack((list_zeng_mg_radii, list_zeng_ea_radii,list_zeng_fe_radii)).T
-interp_zeng = RegularGridInterpolator((list_zeng_masses,dimcmf_zeng), data_zeng, method='linear', bounds_error=False, fill_value=None)
-
+interp_zeng = RegularGridInterpolator((list_zeng_masses,dimcmf_zeng), data_zeng, method='slinear', bounds_error=False, fill_value=None)
 
 
 ##############################################
 #
-#   MAKE LOPEZ-FORTNEY INTERPOLATOR
+#   MAKE GAS DWARF INTERPOLATOR (Tang+2024)
 #
 ##############################################
 
-# open files
-list_met_lf14,list_age_lf14,list_finc_lf14,list_m_lf14,list_fenv_lf14,list_r_lf14 = np.loadtxt(path_models+"LF2014.dat",skiprows=11,unpack=True,usecols=(0,1,2,3,4,5))
+dim_met_t24 = np.array([1.0,50.0])
+dim_age_t24 = np.log10(np.array([0.1,1.0,10.0]))
+dim_finc_t24= np.array([1.0,10.0,100.0,1000.0])
+dim_teq_t24 = 278.0*(dim_finc_t24)**(0.25)
+dim_mass_t24= np.array([1,2,3,4,5,6,8,10,13,16,20])
+dim_fenv_t24= np.array([0.10,0.20,0.50,1,2,5,10,20])
+dim_top_t24 = np.array([0,1,2])
+t24_labels = ["RCB", "20 mbar", "1 nbar"]
 
+t24_data_radius = np.zeros((3,2,3,4,11,8))
 
+data0 = np.genfromtxt(path_models+"Tang2024.dat",filling_values=fill_value,comments='#',skip_header=1,usecols=(5,6,7,8))
+t24_data_radius[0,:,:,:,:,:] = data0[:,0].reshape(2,3,4,11,8)
+t24_data_radius[1,:,:,:,:,:] = data0[:,1].reshape(2,3,4,11,8)
+t24_data_radius[2,:,:,:,:,:] = data0[:,2].reshape(2,3,4,11,8)
 
-dim_met_lf14 = np.array([1.0,50.0])
-dim_age_lf14 = np.array([0.1,1.0,10.0])
-dim_finc_lf14= np.array([0.1,10.0,1000.0])
-dim_teq_lf14 = 278.0*(dim_finc_lf14)**(0.25)
-dim_mass_lf14= np.array([1,1.5,2.4,3.6,5.5,8.5,13,20])
-dim_fenv_lf14= np.array([0.01,0.02,0.05,0.1,0.2,0.5,1.0,2.0,5.0,10.0,20.0])
+interp_t24 = RegularGridInterpolator((dim_top_t24,dim_met_t24, dim_age_t24, dim_teq_t24, dim_mass_t24, dim_fenv_t24), t24_data_radius, method='linear', bounds_error=False, fill_value=fill_value)
 
-data_r_lf14 = np.reshape(list_r_lf14,(2,3,3,8,11))
+# Make the boil-off limit
+t24_bolim_fenv = np.zeros((2,8,11))
+t24_bolim_radius = np.zeros((3,2,8,11))
+data3 = np.genfromtxt(path_models+"T24_grids/boil-off.csv",delimiter=",",filling_values=20.0,comments='#',skip_header=0)
+data3 = data3[:,:12]
+t24_bolim_fenv = data3[:,1:].reshape(2,8,11)
+t24_bolim_fenv = np.clip(t24_bolim_fenv,a_min=0.0,a_max=20)
 
-interp_lf14 = RegularGridInterpolator((dim_met_lf14, dim_age_lf14, dim_teq_lf14, dim_mass_lf14, dim_fenv_lf14), data_r_lf14, method='linear', bounds_error=False, fill_value=np.inf)
+dim_finc_t24_bolim= np.array([1.0,3.0,10.0,30.0,100.0,300.0,1000.0,3000.0])
+dim_teq_t24_bolim = 278.0*(dim_finc_t24_bolim)**(0.25)
 
+interp_t24_bolim_maxf = RegularGridInterpolator((dim_met_t24, dim_teq_t24_bolim, dim_mass_t24), t24_bolim_fenv, method='linear', bounds_error=False, fill_value=np.inf)
 
 ##############################################
 #
@@ -304,28 +339,37 @@ ss_symbols = [ss_alchemy_symbols[planet] for planet in ss_planets]
 ##############################################
 
 # The parametrized function to be plotted
-def rad_iop(x, cmf_iop,wmf_iop,teq_iop):
-    ## Get parameters and validity range or IOP model
-    a,b,c,d = interp_a([cmf_iop,teq_iop,wmf_iop]),interp_b([cmf_iop,teq_iop,wmf_iop]),interp_c([cmf_iop,teq_iop,wmf_iop]),interp_d([cmf_iop,teq_iop,wmf_iop])
-    return 10**(a*np.log10(x) + np.exp(-d*(np.log10(x)+c)) + b)
+def rad_swe(x,top_swe,star_swe,wmf_swe,teq_swe,age_swe):
+    input0 = np.stack((np.full(len(x),top_swe),
+                       np.full(len(x),star_swe),
+                       np.full(len(x),wmf_swe),
+                       np.full(len(x),teq_swe),
+                       x,
+                       np.full(len(x),age_swe)), axis=-1)
+    return interp_swe(input0)
 
-def rad_iop_lim(x, cmf_iop,wmf_iop,teq_iop):
-    ## Get parameters and validity range or IOP model
-    a,b,c,d = interp_a([cmf_iop,teq_iop,wmf_iop]),interp_b([cmf_iop,teq_iop,wmf_iop]),interp_c([cmf_iop,teq_iop,wmf_iop]),interp_d([cmf_iop,teq_iop,wmf_iop])
-    masslimlow,masslimhigh=interp_masslimlow([cmf_iop,teq_iop,wmf_iop]),interp_masslimhigh([cmf_iop,teq_iop,wmf_iop])
-    if cmf_iop < 0.0 or cmf_iop > 0.9 or wmf_iop < 0.1 or wmf_iop > 1.0 or teq_iop < 400.0 or teq_iop > 1300.0:
-        masslimlow,masslimhigh = 1.0,1.0
+# def rad_swe_g(x,wmf_swe,teq_swe,age_swe):
+#     input0 = np.stack((np.full(len(x),wmf_swe),np.full(len(x),teq_swe),x,np.full(len(x),age_swe)), axis=-1)
+#     return interp_swe_g(input0)
 
-    # if a.all(x) < masslimlow or a.all(x) > masslimhigh:
-    #     return np.inf
-    o1=np.where(x<masslimlow,np.inf,10**(a*np.log10(x) + np.exp(-d*(np.log10(x)+c)) + b))
-    o2=np.where(x>masslimhigh,np.inf,10**(a*np.log10(x) + np.exp(-d*(np.log10(x)+c)) + b))
+# swe_func = [rad_swe_m, rad_swe_g]
+# swe_labels = ["Type M", "Type G"]  # Optional labels for each 
 
-    return (o1+o2)*0.5
-
-def rad_lf(x,met,age,teq,fenv):
-    input0 = np.stack((np.full(len(x),met),np.full(len(x),age),np.full(len(x),teq),x,np.full(len(x),fenv)), axis=-1)
-    rp = interp_lf14(input0)
+t24_tolerance_main = 1.0
+t24_tolerance_sec = 0.0
+def rad_t24(x,top,met,age,teq,fenv,tolerance=t24_tolerance_sec):
+    logage = np.log10(age)
+    input0 = np.stack((np.full(len(x),top),
+                       np.full(len(x),met),
+                       np.full(len(x),logage),
+                       np.full(len(x),teq),
+                       x,
+                       np.full(len(x),fenv)), axis=-1)
+    rp = interp_t24(input0)
+    input1 = np.stack((np.full(len(x),met),np.full(len(x),teq),x), axis=-1)
+    boiloff_maxf = interp_t24_bolim_maxf(input1)
+    isbad = np.full(len(x),fenv)*tolerance > boiloff_maxf
+    rp[isbad] = np.nan
     return rp
 
 def rad_zeng(x,cmf):
@@ -336,23 +380,26 @@ def rad_zeng(x,cmf):
 
 
 ## Plot parameters
-xmin, xmax, nx = 0.5, 30.0, 50
+xmin, xmax, nx = 0.5, 30.0, 200
 ymin, ymax     = 0.5, 4.5
 
 x = np.logspace(np.log10(xmin), np.log10(xmax), nx)
 
 # Define initial parameters
-init_cmf_iop = 0.3
-init_wmf_iop = 0.5
-init_teq_iop = 700.0
+init_host_swe = 0
+init_top_swe = 1
+init_wmf_swe = 0.5
+init_teq_swe = 600.0
+init_age_swe = 1.0
 
-init_met_lf = 1.0
-init_age_lf = 1.0
-init_teq_lf = 275.0
-init_fenv_lf = 1.0
+
+init_met_t24 = 1.0
+init_age_t24 = 1.0
+init_teq_t24 = 600.0
+init_fenv_t24 = 1.0
+init_top_t24 = 1.0
 
 init_cmf_zeng = 0.325
-
 
 # Create the figure
 fig = plt.figure(figsize=(7,7))
@@ -369,10 +416,19 @@ ax.set_ylabel('Radius [Re]')
 ax.grid(visible=True,which='major', axis='both')
 
 # Sliding lines
-line_iop, = ax.plot(x, rad_iop(x, init_cmf_iop,init_wmf_iop,init_teq_iop),lw=2,color='blue',ls='--',zorder=20)
-line_iop_lim, = ax.plot(x, rad_iop_lim(x, init_cmf_iop,init_wmf_iop,init_teq_iop),lw=2,color='blue',zorder=25)
-line_lf, = ax.plot(x, rad_lf(x,init_met_lf,init_age_lf,init_teq_lf,init_fenv_lf),lw=2,color='red',zorder=30)
+current_swe = rad_swe(x,init_top_swe,init_host_swe,init_wmf_swe,init_teq_swe,init_age_swe)
+line_swe, = ax.plot(x, current_swe,lw=2,color='blue',ls='-',zorder=20)
+current_t24 = rad_t24(x,init_top_t24,init_met_t24,init_age_t24,init_teq_t24,init_fenv_t24,tolerance=t24_tolerance_main)
+line_t24, = ax.plot(x, current_t24,lw=2,color='red',zorder=30)
 line_zeng, = ax.plot(x, rad_zeng(x,init_cmf_zeng),lw=2,color='brown',zorder=10)
+
+# Minor lines
+line_swe_mbar, = ax.plot(x, rad_swe(x,0,init_host_swe,init_wmf_swe,init_teq_swe,init_age_swe),lw=0.5,color='blue',ls='--',zorder=19)
+line_swe_mibar, = ax.plot(x, rad_swe(x,1,init_host_swe,init_wmf_swe,init_teq_swe,init_age_swe),lw=0.5,color='blue',ls='--',zorder=19)
+line_t24_rcb, = ax.plot(x, rad_t24(x,0,init_met_t24,init_age_t24,init_teq_t24,init_fenv_t24),lw=0.5,ls='--',color='red',zorder=29)
+line_t24_mbar, = ax.plot(x, rad_t24(x,1,init_met_t24,init_age_t24,init_teq_t24,init_fenv_t24),lw=0.5,ls='--',color='red',zorder=29)
+line_t24_nbar, = ax.plot(x, rad_t24(x,2,init_met_t24,init_age_t24,init_teq_t24,init_fenv_t24),lw=0.5,ls='--',color='red',zorder=29)
+
 
 # Planets
 list_exo_mpe = [abs(list_exo_mpe2), list_exo_mpe1]
@@ -387,17 +443,6 @@ catalog_points = ax.errorbar(list_exo_mp,list_exo_rp,
             fmt='o',zorder=-30,
             c="black",alpha=0.2)
 
-# # Add interactive cursors for annotations
-# cursor = mplcursors.cursor(catalog_points, hover=True)
-
-# # Define the annotation behavior
-# @cursor.connect("add")
-# def on_add(sel):
-#     index = sel.index
-#     sel.annotation.set_text(list_exo_names[index])
-#     sel.annotation.set_fontsize(10)
-#     sel.annotation.get_bbox_patch().set_alpha(0.8)
-
 # Add hover annotations
 annot = ax.annotate(
     "",
@@ -406,6 +451,7 @@ annot = ax.annotate(
     textcoords="offset points",
     bbox=dict(boxstyle="round", fc="w"),
     arrowprops=dict(arrowstyle="->"),
+    zorder = 100
 )
 annot.set_visible(False)
 
@@ -492,136 +538,187 @@ ax.text(0.55, 1.10, '50% Liquid H2O',fontsize=5,
 ax.text(0.55, 1.23, '100% Liquid H2O',fontsize=5,
         color='blue',rotation=17)
 
-
 ##############################################
 #
 #   MAKE SLIDERS
 #
 ##############################################
 
-# Aguichine+2021 Slider
+# Aguichine+2024 Slider
 
 # Label
-fig.text(0.05, 0.95, 'Aguichine et al. 2021',weight='bold',
+fig.text(0.05, 0.95, 'Aguichine et al. 2025',weight='bold',
         color='blue',
         bbox={'ec': 'white', 'fc':'white','color':'blue', 'pad': 10})
 
-# Make a horizontal slider to control the CMF
-ax_cmf_iop = fig.add_axes([0.08, 0.90, 0.15, 0.02])  # [left, bottom, width, height]
-cmf_iop_slider = Slider(
-    ax=ax_cmf_iop,
-    label='CMF  ',
-    valmin=0.0,
-    valmax=0.9,
-    valinit=init_cmf_iop,
-    valfmt=' %1.3f'
+# Make a horizontal slider to control the Host Star
+ax_host_swe = fig.add_axes([0.08, 0.90, 0.15, 0.02])  # [left, bottom, width, height]
+host_swe_slider = Slider(
+    ax=ax_host_swe,
+    label='Star  ',
+    valmin=0,
+    valmax=1,
+    valinit=init_host_swe,
+    valstep=1
 )
-cmf_iop_slider.label.set_ha('left')
-cmf_iop_slider.label.set_position((-0.4, 0.5))
-cmf_iop_slider.valtext.set_ha('right')
-cmf_iop_slider.valtext.set_position((1.55, 0.5))  # Shift text to the right outside the slider
+host_swe_slider.label.set_ha('left')
+host_swe_slider.label.set_position((-0.4, 0.5))
+host_swe_slider.valtext.set_ha('right')
+host_swe_slider.valtext.set_position((1.53, 0.5))  # Shift text to the right outside the slider
+host_swe_slider.valtext.set_text(swe_labels_host[init_host_swe])
 
 # Make a horizontal oriented slider to control the WMF
-ax_wmf_iop = fig.add_axes([0.08, 0.85, 0.15, 0.02])  # [left, bottom, width, height]
-wmf_iop_slider = Slider(
-    ax=ax_wmf_iop,
+ax_wmf_swe = fig.add_axes([0.08, 0.75, 0.15, 0.02])  # [left, bottom, width, height]
+wmf_swe_slider = Slider(
+    ax=ax_wmf_swe,
     label="WMF  ",
-    valmin=0.1,
-    valmax=1.0,
-    valinit=init_wmf_iop,
-    valfmt=' %1.3f'
+    valmin=np.log10(0.001),
+    valmax=np.log10(1.0),
+    valinit=np.log10(init_wmf_swe),
+    #valfmt=' %1.3f'
 )
-wmf_iop_slider.label.set_ha('left')
-wmf_iop_slider.label.set_position((-0.4, 0.5))
-wmf_iop_slider.valtext.set_ha('right')
-wmf_iop_slider.valtext.set_position((1.55, 0.5))  # Shift text to the right outside the slider
+wmf_swe_slider.label.set_ha('left')
+wmf_swe_slider.label.set_position((-0.4, 0.5))
+wmf_swe_slider.valtext.set_text(f'{init_wmf_swe*100:#.3g} %')
+wmf_swe_slider.valtext.set_ha('right')
+wmf_swe_slider.valtext.set_position((1.53, 0.5))  # Shift text to the right outside the slider
 
 # Make a horizontal oriented slider to control the Teq
-ax_teq_iop = fig.add_axes([0.08, 0.80, 0.15, 0.02])  # [left, bottom, width, height]
-teq_iop_slider = Slider(
-    ax=ax_teq_iop,
+ax_teq_swe = fig.add_axes([0.08, 0.80, 0.15, 0.02])  # [left, bottom, width, height]
+teq_swe_slider = Slider(
+    ax=ax_teq_swe,
     label=r"T$_{\mathrm{eq}}$  ",
-    valmin=400.0,
-    valmax=1300.0,
-    valinit=init_teq_iop,
+    valmin=500.0,
+    valmax=700.0,
+    valinit=init_teq_swe,
     valfmt=' %4.0f K'
 )
-teq_iop_slider.label.set_ha('left')
-teq_iop_slider.label.set_position((-0.4, 0.5))
-teq_iop_slider.valtext.set_ha('right')
-teq_iop_slider.valtext.set_position((1.55, 0.5))  # Shift text to the right outside the slider
+teq_swe_slider.label.set_ha('left')
+teq_swe_slider.label.set_position((-0.4, 0.5))
+teq_swe_slider.valtext.set_ha('right')
+teq_swe_slider.valtext.set_position((1.53, 0.5))  # Shift text to the right outside the slider
 
-# Lopez & Fortney 2014 Slider
+# Make a horizontal oriented slider to control the Teq
+ax_age_swe = fig.add_axes([0.08, 0.85, 0.15, 0.02])  # [left, bottom, width, height]
+age_swe_slider = Slider(
+    ax=ax_age_swe,
+    label="Age  ",
+    valmin=np.log10(0.0010000001),
+    valmax=np.log10(19.99999),
+    valinit=np.log10(init_age_swe),
+    #valfmt=' %4.0f K'
+)
+age_swe_slider.label.set_ha('left')
+age_swe_slider.label.set_position((-0.4, 0.5))
+age_swe_slider.valtext.set_text(f'{init_age_swe:#.3g} Gyr')
+age_swe_slider.valtext.set_ha('right')
+age_swe_slider.valtext.set_position((1.63, 0.5))  # Shift text to the right outside the slider
+
+# Make a horizontal oriented slider to control the Top of the Atmosphere
+ax_top_swe = fig.add_axes([0.08, 0.71, 0.15, 0.02])  # [left, bottom, width, height]
+top_swe_slider = Slider(
+    ax=ax_top_swe,
+    label="Atm top  ",
+    valmin=0,
+    valmax=1,
+    valinit=init_top_swe,
+    valstep=1
+)
+top_swe_slider.label.set_ha('left')
+top_swe_slider.label.set_position((-0.5, 0.5))
+top_swe_slider.label.set_size(9)
+top_swe_slider.valtext.set_ha('right')
+top_swe_slider.valtext.set_position((1.53, 0.5))  # Shift text to the right outside the slider
+top_swe_slider.valtext.set_text(swe_labels_top[init_top_swe])
+
+
+# Tang et al. 2024 Slider
 
 # Label
-fig.text(0.38, 0.95, 'Lopez & Fortney 2014',weight='bold',
+fig.text(0.40, 0.95, 'Tang et al. 2024',weight='bold',
         color='red',
         bbox={'ec': 'white', 'fc':'white','color':'blue', 'pad': 10})
 
 # Make a horizontal slider to control the Metallicity
-ax_met_lf = fig.add_axes([0.4, 0.90, 0.15, 0.02])  # [left, bottom, width, height]
-met_lf_slider = Slider(
-    ax=ax_met_lf,
+ax_met_t24 = fig.add_axes([0.42, 0.90, 0.15, 0.02])  # [left, bottom, width, height]
+met_t24_slider = Slider(
+    ax=ax_met_t24,
     label='Met  ',
     valmin=1.0,
     valmax=50.0,
-    valinit=init_met_lf,
+    valinit=init_met_t24,
     valfmt=' x%2.0f Solar'
 )
-#met_lf_slider.label.set_size(9)
-met_lf_slider.label.set_ha('left')
-met_lf_slider.label.set_position((-0.4, 0.5))
-met_lf_slider.valtext.set_size(9)
-met_lf_slider.valtext.set_ha('right')
-met_lf_slider.valtext.set_position((1.65, 0.5))  # Shift text to the right outside the slider
+#met_t24_slider.label.set_size(9)
+met_t24_slider.label.set_ha('left')
+met_t24_slider.label.set_position((-0.4, 0.5))
+met_t24_slider.valtext.set_size(9)
+met_t24_slider.valtext.set_ha('right')
+met_t24_slider.valtext.set_position((1.65, 0.5))  # Shift text to the right outside the slider
 
 # Make a horizontal oriented slider to control the Age
-ax_age_lf = fig.add_axes([0.4, 0.85, 0.15, 0.02])  # [left, bottom, width, height]
-age_lf_slider = Slider(
-    ax=ax_age_lf,
+ax_age_t24 = fig.add_axes([0.42, 0.85, 0.15, 0.02])  # [left, bottom, width, height]
+age_t24_slider = Slider(
+    ax=ax_age_t24,
     label="Age  ",
     valmin=np.log10(0.1),
     valmax=np.log10(10.0),
-    valinit=np.log10(init_age_lf),
+    valinit=np.log10(init_age_t24),
     #valfmt=' %2.1f'
 )
-age_lf_slider.label.set_ha('left')
-age_lf_slider.label.set_position((-0.4, 0.5))
-age_lf_slider.valtext.set_text(f'{init_age_lf: 2.1f} Gyr')
-age_lf_slider.valtext.set_ha('right')
-age_lf_slider.valtext.set_position((1.65, 0.5))  # Shift text to the right outside the slider
+age_t24_slider.label.set_ha('left')
+age_t24_slider.label.set_position((-0.4, 0.5))
+age_t24_slider.valtext.set_text(f'{init_age_t24:#.3g} Gyr')
+age_t24_slider.valtext.set_ha('right')
+age_t24_slider.valtext.set_position((1.65, 0.5))  # Shift text to the right outside the slider
 
 
 # Make a horizontal oriented slider to control the Teq
-ax_teq_lf = fig.add_axes([0.4, 0.80, 0.15, 0.02])  # [left, bottom, width, height]
-teq_lf_slider = Slider(
-    ax=ax_teq_lf,
+ax_teq_t24 = fig.add_axes([0.42, 0.80, 0.15, 0.02])  # [left, bottom, width, height]
+teq_t24_slider = Slider(
+    ax=ax_teq_t24,
     label=r"T$_{\mathrm{eq}}$  ",
-    valmin=160.0,
+    valmin=278.0,
     valmax=1500.0,
-    valinit=init_teq_lf,
+    valinit=init_teq_t24,
     valfmt=' %4.0f K'
 )
-teq_lf_slider.label.set_ha('left')
-teq_lf_slider.label.set_position((-0.4, 0.5))
-teq_lf_slider.valtext.set_ha('right')
-teq_lf_slider.valtext.set_position((1.65, 0.5))  # Shift text to the right outside the slider
+teq_t24_slider.label.set_ha('left')
+teq_t24_slider.label.set_position((-0.4, 0.5))
+teq_t24_slider.valtext.set_ha('right')
+teq_t24_slider.valtext.set_position((1.65, 0.5))  # Shift text to the right outside the slider
 
 # Make a horizontal oriented slider to control the Envelope fraction
-ax_fenv_lf = fig.add_axes([0.4, 0.75, 0.15, 0.02])  # [left, bottom, width, height]
-fenv_lf_slider = Slider(
-    ax=ax_fenv_lf,
+ax_fenv_t24 = fig.add_axes([0.42, 0.75, 0.15, 0.02])  # [left, bottom, width, height]
+fenv_t24_slider = Slider(
+    ax=ax_fenv_t24,
     label=r"f$_{\mathrm{env}}$  ",
-    valmin=np.log10(0.01),
+    valmin=np.log10(0.1),
     valmax=np.log10(20.0),
-    valinit=np.log10(init_fenv_lf),
+    valinit=np.log10(init_fenv_t24),
     #valfmt=" %2.2f %%"
 )
-fenv_lf_slider.label.set_ha('left')
-fenv_lf_slider.label.set_position((-0.4, 0.5))
-fenv_lf_slider.valtext.set_text(f'{init_fenv_lf: 2.2f} %')
-fenv_lf_slider.valtext.set_ha('right')
-fenv_lf_slider.valtext.set_position((1.65, 0.5))  # Shift text to the right outside the slider
+fenv_t24_slider.label.set_ha('left')
+fenv_t24_slider.label.set_position((-0.4, 0.5))
+fenv_t24_slider.valtext.set_text(f'{init_fenv_t24:#.3g} %')
+fenv_t24_slider.valtext.set_ha('right')
+fenv_t24_slider.valtext.set_position((1.65, 0.5))  # Shift text to the right outside the slider
+
+# Make a horizontal oriented slider to control the Top of the Atmosphere
+ax_top_t24 = fig.add_axes([0.42, 0.71, 0.15, 0.02])  # [left, bottom, width, height]
+top_t24_slider = Slider(
+    ax=ax_top_t24,
+    label="Atm top  ",
+    valmin=0,
+    valmax=2,
+    valinit=init_top_t24,
+    valstep=1
+)
+top_t24_slider.label.set_ha('left')
+top_t24_slider.label.set_position((-0.5, 0.5))
+top_t24_slider.label.set_size(9)
+top_t24_slider.valtext.set_ha('right')
+top_t24_slider.valtext.set_position((1.65, 0.5))  # Shift text to the right outside the slider
 
 # Zeng+2016 Slider
 
@@ -643,26 +740,56 @@ cmf_zeng_slider = Slider(
 
 # The function to be called anytime a slider's value changes
 def update(val):
-    age_linear = 10**age_lf_slider.val
-    age_lf_slider.valtext.set_text(f'{age_linear: 2.1f} Gyr')  # Update displayed value
+    # Update SWE
+    wmf_swe_linear = 10**wmf_swe_slider.val
+    wmf_swe_slider.valtext.set_text(f'{wmf_swe_linear*100:#.3g} %')  # Update displayed value
 
-    fenv_linear = 10**fenv_lf_slider.val
-    fenv_lf_slider.valtext.set_text(f'{fenv_linear: 2.2f} %')  # Update displayed value
+    age_linear_swe = 10**age_swe_slider.val
+    age_swe_slider.valtext.set_text(f'{age_linear_swe:#.3g} Gyr')  # Update displayed value
 
-    line_iop.set_ydata(rad_iop(x, cmf_iop_slider.val,wmf_iop_slider.val,teq_iop_slider.val))
-    line_iop_lim.set_ydata(rad_iop_lim(x, cmf_iop_slider.val,wmf_iop_slider.val,teq_iop_slider.val))
-    fig.canvas.draw_idle()
-    line_lf.set_ydata(rad_lf(x, met_lf_slider.val,age_linear,teq_lf_slider.val,fenv_linear))
+    host_swe_index = int(host_swe_slider.val)
+    host_swe_slider.valtext.set_text(swe_labels_host[host_swe_index])
+    top_swe_index = int(top_swe_slider.val)
+    top_swe_slider.valtext.set_text(swe_labels_top[top_swe_index])
+    current_swe = rad_swe(x,top_swe_index,host_swe_index,wmf_swe_linear,teq_swe_slider.val,age_linear_swe)
+    line_swe.set_ydata(current_swe)
+
+    line_swe_mbar.set_ydata(rad_swe(x,0,host_swe_index,wmf_swe_linear,teq_swe_slider.val,age_linear_swe))
+    line_swe_mibar.set_ydata(rad_swe(x,1,host_swe_index,wmf_swe_linear,teq_swe_slider.val,age_linear_swe))
+
+    # Update T24
+    age_t24_linear = 10**age_t24_slider.val
+    age_t24_slider.valtext.set_text(f'{age_t24_linear:#.3g} Gyr')  # Update displayed value
+
+    fenv_t24_linear = 10**fenv_t24_slider.val
+    fenv_t24_slider.valtext.set_text(f'{fenv_t24_linear:#.3g} %')  # Update displayed value
+
+    func_t24_index = int(top_t24_slider.val)
+    top_t24_slider.valtext.set_text(t24_labels[func_t24_index])
+    current_t24 = rad_t24(x,func_t24_index,met_t24_slider.val,age_t24_linear,teq_t24_slider.val,fenv_t24_linear,tolerance=t24_tolerance_main)
+    line_t24.set_ydata(current_t24)
+
+    line_t24_rcb.set_ydata(rad_t24(x,0,met_t24_slider.val,age_t24_linear,teq_t24_slider.val,fenv_t24_linear))
+    line_t24_mbar.set_ydata(rad_t24(x,1,met_t24_slider.val,age_t24_linear,teq_t24_slider.val,fenv_t24_linear))
+    line_t24_nbar.set_ydata(rad_t24(x,2,met_t24_slider.val,age_t24_linear,teq_t24_slider.val,fenv_t24_linear))
+
+    # Update Zeng
     line_zeng.set_ydata(rad_zeng(x, cmf_zeng_slider.val))
 
+
 # register the update function with each slider
-cmf_iop_slider.on_changed(update)
-wmf_iop_slider.on_changed(update)
-teq_iop_slider.on_changed(update)
-met_lf_slider.on_changed(update)
-age_lf_slider.on_changed(update)
-teq_lf_slider.on_changed(update)
-fenv_lf_slider.on_changed(update)
+host_swe_slider.on_changed(update)
+wmf_swe_slider.on_changed(update)
+teq_swe_slider.on_changed(update)
+age_swe_slider.on_changed(update)
+top_swe_slider.on_changed(update)
+
+met_t24_slider.on_changed(update)
+age_t24_slider.on_changed(update)
+teq_t24_slider.on_changed(update)
+fenv_t24_slider.on_changed(update)
+top_t24_slider.on_changed(update)
+
 cmf_zeng_slider.on_changed(update)
 
 # Create a `matplotlib.widgets.Button` to reset the sliders to initial values.
@@ -671,13 +798,18 @@ button = Button(resetax, 'Reset', hovercolor='0.975')
 
 
 def reset(event):
-    cmf_iop_slider.reset()
-    wmf_iop_slider.reset()
-    teq_iop_slider.reset()
-    met_lf_slider.reset()
-    age_lf_slider.reset()
-    teq_lf_slider.reset()
-    fenv_lf_slider.reset()
+    host_swe_slider.reset()
+    wmf_swe_slider.reset()
+    teq_swe_slider.reset()
+    age_swe_slider.reset()
+    top_swe_slider.reset()
+
+    met_t24_slider.reset()
+    age_t24_slider.reset()
+    teq_t24_slider.reset()
+    fenv_t24_slider.reset()
+    top_t24_slider.reset()
+
     cmf_zeng_slider.reset()
 
 button.on_clicked(reset)

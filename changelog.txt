@@ -108,3 +108,75 @@ Changes:
 
 2. Hovering the mouse cursor over a planet will show a text box
    with the exoplanet's name.
+
+
+#####################################################
+v2.0.0 - new interior models
+Author: Artyom (Artem) Aguichine
+Date: 2024/12/14
+
+Changes:
+1. Replaced Lopez & Fortney 2014 model by Tang et al. 2024 model
+
+2. Replaced Aguichine et al. 2021 model by Aguichine 2024
+
+#####################################################
+v2.0.0 - new interior models
+Author: Artyom (Artem) Aguichine
+Date: 2024/12/24
+
+Changes:
+1. Replaced Lopez & Fortney 2014 model (LF14) by Tang et al. 2024 model (T24).
+
+2. Replaced Aguichine et al. 2021 (A21) model by Aguichine 2024 (A24).
+
+#####################################################
+v2.1.0 - multiple curves
+Author: Artyom (Artem) Aguichine
+Date: 2024/12/24
+
+Changes:
+1. T24 model is now shown for various pressure top
+   at the same time with dashed lines.
+
+#####################################################
+v2.1.1 - extrapolating T24
+Author: Artyom (Artem) Aguichine
+Date: 2024/12/24
+
+Changes:
+1. T24 model is extrapolated beyond boil-off.
+
+2. As a test, A24 model is shown for both stellar types in
+   dashed lines.
+
+#####################################################
+v2.1.2 - experimental: boil-off curve
+Author: Artyom (Artem) Aguichine
+Date: 2024/12/24
+
+Changes:
+1. Experimental: plotting the boil-off limit curve for
+   the T24 model.
+
+#####################################################
+v2.2.1
+Author: Artyom (Artem) Aguichine
+Date: 2025/2/11
+
+Changes:
+1. Abandonned the boil-off curve, and clean-up.
+
+#####################################################
+v2.3.1
+Author: Artyom (Artem) Aguichine
+Date: 2025/3/17
+
+Changes:
+1. Final version of the SWE model (Aguichine+2025), which
+   gives the radius at 20 mbar and 1 microbar.
+
+2. The T24 model has been extrapolated beyond boil-off 
+   to provide an approximate shape of mass-radius relations
+   beyond the boil-off limit.
+
