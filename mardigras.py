@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button, Slider
 from matplotlib import patheffects
+import mplcursors
 
 from scipy.interpolate import RegularGridInterpolator
 

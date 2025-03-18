@@ -46,7 +46,7 @@ Highlighted targets are intended for dedicated studies, discovery, or parameter 
 
 ## Catalog update
 ### Automatic update
-To update the NEA catalog, rnu the tool with the flag `--update-nea-catalog`:
+To update the NEA catalog, run the tool with the flag `--update-nea-catalog`:
 ```
 python3 mardigras.py --update-nea-catalog
 ```
