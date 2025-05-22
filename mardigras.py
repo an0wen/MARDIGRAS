@@ -128,7 +128,7 @@ interp_zeng = RegularGridInterpolator((list_zeng_masses,dimcmf_zeng), data_zeng,
 ##############################################
 
 dim_met_t24 = np.array([1.0,50.0])
-dim_age_t24 = np.log10(np.array([0.1,1.0,10.0]))
+dim_age_t24 = np.log10(np.array([0.01,0.1,1.0,10.0]))
 dim_finc_t24= np.array([1.0,10.0,100.0,1000.0])
 dim_teq_t24 = 278.0*(dim_finc_t24)**(0.25)
 dim_mass_t24= np.array([1,2,3,4,5,6,8,10,13,16,20])
@@ -136,12 +136,12 @@ dim_fenv_t24= np.array([0.10,0.20,0.50,1,2,5,10,20])
 dim_top_t24 = np.array([0,1,2])
 t24_labels = ["RCB", "20 mbar", "1 nbar"]
 
-t24_data_radius = np.zeros((3,2,3,4,11,8))
+t24_data_radius = np.zeros((3,2,4,4,11,8))
 
 data0 = np.genfromtxt(path_models+"Tang2024.dat",filling_values=fill_value,comments='#',skip_header=1,usecols=(5,6,7,8))
-t24_data_radius[0,:,:,:,:,:] = data0[:,0].reshape(2,3,4,11,8)
-t24_data_radius[1,:,:,:,:,:] = data0[:,1].reshape(2,3,4,11,8)
-t24_data_radius[2,:,:,:,:,:] = data0[:,2].reshape(2,3,4,11,8)
+t24_data_radius[0,:,:,:,:,:] = data0[:,0].reshape(2,4,4,11,8)
+t24_data_radius[1,:,:,:,:,:] = data0[:,1].reshape(2,4,4,11,8)
+t24_data_radius[2,:,:,:,:,:] = data0[:,2].reshape(2,4,4,11,8)
 
 interp_t24 = RegularGridInterpolator((dim_top_t24,dim_met_t24, dim_age_t24, dim_teq_t24, dim_mass_t24, dim_fenv_t24), t24_data_radius, method='linear', bounds_error=False, fill_value=fill_value)
 
@@ -645,7 +645,7 @@ ax_age_t24 = fig.add_axes([0.42, 0.85, 0.15, 0.02])  # [left, bottom, width, hei
 age_t24_slider = Slider(
     ax=ax_age_t24,
     label="Age  ",
-    valmin=np.log10(0.1),
+    valmin=np.log10(0.01),
     valmax=np.log10(10.0),
     valinit=np.log10(init_age_t24),
     #valfmt=' %2.1f'
