@@ -28,7 +28,7 @@ python3 mardigras.py
 
 ### Contents of v2
 Three curves are controlled by sliders:
-1. Aguichine et al. 2025 (in review, https://arxiv.org/abs/2412.17945): Represents an envelope of pure water in a supercritical state, with a pure steam atmosphere on top.
+1. Aguichine et al. 2025 (accepted, https://arxiv.org/abs/2412.17945): Represents an envelope of pure water in a supercritical state, with a pure steam atmosphere on top.
 2. Tang et al. 2024 (https://ui.adsabs.harvard.edu/abs/2024ApJ...976..221T/abstract): Represents an H-He gas envelope with metallicity ranging from 1xSolar to 50xSolar.
 3. Zeng et al. 2016 (https://ui.adsabs.harvard.edu/abs/2016ApJ...819..127Z/abstract): For terrestrial planets with variable (iron) core mass fractions.
 
