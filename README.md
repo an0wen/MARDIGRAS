@@ -75,9 +75,9 @@ The catalog of targets (planets shown as stars on the figure) has the same forma
 ## Compatibility
 
 *mardigras* is developed and tested on MacOS (Retina) with Python 3.12.4. It uses the following libraries:
-- numpy v2.0.1
-- matplotlib v3.10.0
-- scipy v1.15.2
+- `numpy` v2.0.1
+- `matplotlib` v3.10.0
+- `scipy` v1.15.2
 
 In addition to this, *mardigras* uses Python built-in packages `requests`, `os`, `datetime` and `argparse`. 
 
