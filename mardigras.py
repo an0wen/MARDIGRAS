@@ -8,7 +8,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button, Slider
 from matplotlib import patheffects
-import mplcursors
 
 from scipy.interpolate import RegularGridInterpolator
 
@@ -78,14 +77,8 @@ listrpfull2 = np.loadtxt(path_swe,skiprows=36,unpack=True,usecols=(7))
 listrpfull = np.array((listrpfull1,listrpfull2))
 listrpfull = np.delete(listrpfull, np.arange(17, listrpfull.size, 18))
 
-# mask = listrpfull == -1.0
-# listrpfull[mask] == np.inf
-
-# listrpfull_m = listrpfull[0:int(len(listrpfull)/2)]
-# listrpfull_g = listrpfull[int(len(listrpfull)/2):]
 
 # Make SWE interpolator
-
 swe_dim_wmf = np.array(swe_wmfs)/100
 swe_dim_teq = np.array(swe_teqs)
 swe_dim_mass = np.array(swe_masses)
@@ -94,7 +87,6 @@ swe_dim_star = np.array([0,1])
 swe_dim_top = np.array([0,1])
 
 swe_data_radius = np.reshape(listrpfull,(2,2,12,3,20,17))
-# swe_data_radius_g = np.reshape(listrpfull_g,(12,7,20,17))
 
 fill_value = np.nan
 interp_swe = RegularGridInterpolator((swe_dim_top,
@@ -104,7 +96,6 @@ interp_swe = RegularGridInterpolator((swe_dim_top,
                                       swe_dim_mass,
                                       swe_dim_age), 
                                      swe_data_radius, method='slinear', bounds_error=False, fill_value=fill_value)
-# interp_swe_g = RegularGridInterpolator((swe_dim_wmf, swe_dim_teq, swe_dim_mass, swe_dim_age), swe_data_radius_g, method='slinear', bounds_error=False, fill_value=fill_value)
 
 ##############################################
 #
@@ -137,7 +128,7 @@ interp_zeng = RegularGridInterpolator((list_zeng_masses,dimcmf_zeng), data_zeng,
 ##############################################
 
 dim_met_t24 = np.array([1.0,50.0])
-dim_age_t24 = np.log10(np.array([0.1,1.0,10.0]))
+dim_age_t24 = np.log10(np.array([0.01,0.1,1.0,10.0]))
 dim_finc_t24= np.array([1.0,10.0,100.0,1000.0])
 dim_teq_t24 = 278.0*(dim_finc_t24)**(0.25)
 dim_mass_t24= np.array([1,2,3,4,5,6,8,10,13,16,20])
@@ -145,12 +136,12 @@ dim_fenv_t24= np.array([0.10,0.20,0.50,1,2,5,10,20])
 dim_top_t24 = np.array([0,1,2])
 t24_labels = ["RCB", "20 mbar", "1 nbar"]
 
-t24_data_radius = np.zeros((3,2,3,4,11,8))
+t24_data_radius = np.zeros((3,2,4,4,11,8))
 
 data0 = np.genfromtxt(path_models+"Tang2024.dat",filling_values=fill_value,comments='#',skip_header=1,usecols=(5,6,7,8))
-t24_data_radius[0,:,:,:,:,:] = data0[:,0].reshape(2,3,4,11,8)
-t24_data_radius[1,:,:,:,:,:] = data0[:,1].reshape(2,3,4,11,8)
-t24_data_radius[2,:,:,:,:,:] = data0[:,2].reshape(2,3,4,11,8)
+t24_data_radius[0,:,:,:,:,:] = data0[:,0].reshape(2,4,4,11,8)
+t24_data_radius[1,:,:,:,:,:] = data0[:,1].reshape(2,4,4,11,8)
+t24_data_radius[2,:,:,:,:,:] = data0[:,2].reshape(2,4,4,11,8)
 
 interp_t24 = RegularGridInterpolator((dim_top_t24,dim_met_t24, dim_age_t24, dim_teq_t24, dim_mass_t24, dim_fenv_t24), t24_data_radius, method='linear', bounds_error=False, fill_value=fill_value)
 
@@ -347,13 +338,6 @@ def rad_swe(x,top_swe,star_swe,wmf_swe,teq_swe,age_swe):
                        x,
                        np.full(len(x),age_swe)), axis=-1)
     return interp_swe(input0)
-
-# def rad_swe_g(x,wmf_swe,teq_swe,age_swe):
-#     input0 = np.stack((np.full(len(x),wmf_swe),np.full(len(x),teq_swe),x,np.full(len(x),age_swe)), axis=-1)
-#     return interp_swe_g(input0)
-
-# swe_func = [rad_swe_m, rad_swe_g]
-# swe_labels = ["Type M", "Type G"]  # Optional labels for each 
 
 t24_tolerance_main = 1.0
 t24_tolerance_sec = 0.0
@@ -661,7 +645,7 @@ ax_age_t24 = fig.add_axes([0.42, 0.85, 0.15, 0.02])  # [left, bottom, width, hei
 age_t24_slider = Slider(
     ax=ax_age_t24,
     label="Age  ",
-    valmin=np.log10(0.1),
+    valmin=np.log10(0.01),
     valmax=np.log10(10.0),
     valinit=np.log10(init_age_t24),
     #valfmt=' %2.1f'
@@ -719,6 +703,7 @@ top_t24_slider.label.set_position((-0.5, 0.5))
 top_t24_slider.label.set_size(9)
 top_t24_slider.valtext.set_ha('right')
 top_t24_slider.valtext.set_position((1.65, 0.5))  # Shift text to the right outside the slider
+top_t24_slider.valtext.set_text(t24_labels[int(init_top_t24)])
 
 # Zeng+2016 Slider
 
