@@ -72,6 +72,17 @@ Since *mardigras* is a tool to infer composition based on mass and radius (and o
 
 The catalog of targets (planets shown as stars on the figure) has the same formatting as the full catalog. It is recommended to have at most 7 highlighted targets to avoid overloading the figure.
 
+## Compatibility
+
+*mardigras* is developed and tested on MacOS (Retina) with Python 3.12.4. It uses the following libraries:
+- `numpy` v2.0.1
+- `matplotlib` v3.10.0
+- `scipy` v1.15.2
+
+In addition to this, *mardigras* uses Python built-in packages `requests`, `os`, `datetime` and `argparse`. 
+
+We strive for using simple packages to minimize compatibility issues.
+
 ## Credits
 
 If you use *mardigras*, please give credit to the initial release:
