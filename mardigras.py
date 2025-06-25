@@ -228,8 +228,9 @@ def read_nea_last_update(output_file):
     try:
         with open(output_file, "r") as f:
             for line in f:
-                if line.startswith("# NEA Catalog last updated:"):
-                    print(line.strip())
+                text_lookup = "# Catalog last updated:"
+                if line.startswith(text_lookup):
+                    print("# NEA catalog last updated: ",line.replace(text_lookup,'').replace('\n',''))
                     break
     except Exception as e:
         print(f"Error reading the catalog: {e}")
@@ -261,7 +262,7 @@ def update_planets_exoplanet_catalog(catalog_url, output_file):
     if True:
         print("PlanetS auto update currently not implemented, skipping updating attempt.")
         return
-        
+
     if not check_internet_connection():
         print("No internet connection. Unable to update the exoplanet catalog.")
         return
@@ -302,8 +303,9 @@ def read_planets_last_update(output_file):
     try:
         with open(output_file, "r") as f:
             for line in f:
-                if line.startswith("# Catalog last updated:"):
-                    print(line.strip())
+                text_lookup = "# Catalog last updated:"
+                if line.startswith(text_lookup):
+                    print("# PlanetS catalog last updated: ",line.replace(text_lookup,'').replace('\n',''))
                     break
     except Exception as e:
         print(f"Error reading the catalog: {e}")
