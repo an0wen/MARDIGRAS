@@ -83,6 +83,13 @@ In addition to this, *mardigras* uses Python built-in packages `requests`, `os`,
 
 We strive for using simple packages to minimize compatibility issues.
 
+## Additional information about interior structure models and sliders interpretation
+
+### Zeng et al. 2016: rocky planets
+
+The Zeng et al. 2016 model is a 4-layer interior strucutre model (center to surface: solid iron core, liquid iron core, lower mantle, upper mantle). It was calibrated to reproduce the interior or Earth according to the Preliminary Earth Reference Model (PREM, Dziewonski and Anderson 1981, https://doi.org/10.1016/0031-9201(81)90046-7). The slider controls the Core Mass Fraction (CMF), which is the mass occupied by the iron core (solid+liquid). When CMF=0, the planet is 100% mantle. When CMF=1, the planet is 100% iron core. The CMF needed to reproduce the radius of the Earth is 0.325, and for Mercury *work in progress*.
+
+
 ## Credits
 
 If you use *mardigras*, please give credit to the initial release:
