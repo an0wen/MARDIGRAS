@@ -17,7 +17,12 @@ python3 mardigras.py
 
 ### Available options
 *mardigras* can be run with the following options:
-1. Updating the NEA catalog:
+1. Choose exoplanet catalog: "NEA" or "PlanetS". Default is "NEA" (NASA Exoplanet Archive).
+   ```
+   python3 mardigras.py --catalog PlanetS
+   ```
+   or
+3. Updating the NEA catalog:
    ```
    python3 mardigras.py --update-nea-catalog
    ```
