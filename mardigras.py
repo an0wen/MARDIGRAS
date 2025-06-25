@@ -19,11 +19,18 @@ import argparse
 # Define command-line arguments
 parser = argparse.ArgumentParser(description="Run the mardigras tool with optional features.")
 
-# Flag to update the catalog
+# Flag to update the NEA catalog
 parser.add_argument(
     "--update-nea-catalog",
     action="store_true",
     help="Update the NASA Exoplanet Archive catalog before starting the tool.",
+)
+
+# Flag to update the PlanetS catalog
+parser.add_argument(
+    "--update-planets-catalog",
+    action="store_true",
+    help="Update the PlanetS catalog before starting the tool.",
 )
 
 # Flag to choose another type of catalog
@@ -164,7 +171,7 @@ interp_t24_bolim_maxf = RegularGridInterpolator((dim_met_t24, dim_teq_t24_bolim,
 #
 ##############################################
 
-# Exoplanet catalog
+# NASA Exoplanet catalog
 
 def check_internet_connection():
     """Check if there is internet access by pinging a known URL."""
@@ -221,7 +228,7 @@ def read_nea_last_update(output_file):
     try:
         with open(output_file, "r") as f:
             for line in f:
-                if line.startswith("# Catalog last updated:"):
+                if line.startswith("# NEA Catalog last updated:"):
                     print(line.strip())
                     break
     except Exception as e:
@@ -233,8 +240,9 @@ nea_catalog_url = ("https://exoplanetarchive.ipac.caltech.edu/TAP/sync?"
                "pl_masse,pl_masseerr1,pl_masseerr2,pl_eqt+from+ps+where+"
                "default_flag=1+and+pl_controv_flag=0+and+pl_rade+is+not+null+"
                "and+pl_masse+is+not+null+and+pl_bmassprov='Mass'&format=tsv")
-nea_output_file = "./data/catalog_exoplanets.dat"
+nea_output_file = "./data/catalog_exoplanets_nea.dat"
 
+# Update NEA catalog
 if args.update_nea_catalog:
     # Update the catalog
     update_nea_exoplanet_catalog(nea_catalog_url, nea_output_file)
@@ -242,35 +250,135 @@ else:
     # Check for existing catalog and print the last update date
     read_nea_last_update(nea_output_file)
 
-list_catalog_rp,list_catalog_rpe1,list_catalog_rpe2,list_catalog_mp,list_catalog_mpe1,list_catalog_mpe2 \
-    = np.genfromtxt(nea_output_file,delimiter="\t",unpack=True,usecols=(1,2,3,4,5,6),filling_values=0.0)
 
-# Load the exoplanet names
-list_catalog_names = np.genfromtxt(
-    nea_output_file, delimiter="\t", dtype=str, usecols=0
-)
+# PlanetS catalog
 
-# This procedure removes planets that don't have radius and/or mass measurements
-# the goal is to have arrays of smaller size, so that rendering is faster when sliders are used
-list_exo_rp = []
-list_exo_rpe1 = []
-list_exo_rpe2 = []
-list_exo_mp = []
-list_exo_mpe1 = []
-list_exo_mpe2 = []
-list_exo_names = []
-for i in range(len(list_catalog_rp)):
-    exo_mass_prec = 0.5 # minimum precision on exoplanet mass
-    if list_catalog_rp[i]!=0.0 and list_catalog_mp[i]!=0.0 \
-        and (abs(list_catalog_mpe1[i]))/list_catalog_mp[i] < exo_mass_prec \
-        and (abs(list_catalog_mpe2[i]))/list_catalog_mp[i] < exo_mass_prec:
-        list_exo_rp = np.append(list_exo_rp,[list_catalog_rp[i]])
-        list_exo_rpe1 = np.append(list_exo_rpe1,[list_catalog_rpe1[i]])
-        list_exo_rpe2 = np.append(list_exo_rpe2,[list_catalog_rpe2[i]])
-        list_exo_mp = np.append(list_exo_mp,[list_catalog_mp[i]])
-        list_exo_mpe1 = np.append(list_exo_mpe1,[list_catalog_mpe1[i]])
-        list_exo_mpe2 = np.append(list_exo_mpe2,[list_catalog_mpe2[i]])
-        list_exo_names = np.append(list_exo_names,[list_catalog_names[i]])
+def update_planets_exoplanet_catalog(catalog_url, output_file):
+    """
+    Updates the PlanetS exoplanet catalog from the DACE website.
+    Warning: Work in progress, currently not working
+    """
+    if True:
+        print("PlanetS auto update currently not implemented, skipping updating attempt.")
+        return
+        
+    if not check_internet_connection():
+        print("No internet connection. Unable to update the exoplanet catalog.")
+        return
+
+    try:
+        response = requests.get(catalog_url, timeout=10)
+        response.raise_for_status()  # Raise an error for HTTP issues
+        
+        # Prepare the header
+        header = [
+            "# NASA Exoplanet Catalog",
+            f"# Source: {catalog_url}",
+            f"# Catalog last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        ]
+        
+        # Write the header and data to the file
+        with open(output_file, "w") as f:
+            f.write("\n".join(header) + "\n")
+            # Add '#' to the parameter names
+            data_lines = response.text.splitlines()
+            f.write("# " + data_lines[0] + "\n")  # Add # to parameter names
+            f.write("\n".join(data_lines[1:]) + "\n")
+        
+        print(f"Catalog updated successfully and saved to {output_file}")
+    except requests.RequestException as e:
+        print(f"Error fetching the catalog: {e}")
+
+def read_planets_last_update(output_file):
+    """
+    Reads the date of the last update from the catalog file and prints it.
+    Parameters:
+        output_file (str): Path to the catalog file.
+    """
+    if not os.path.exists(output_file):
+        print("Catalog file does not exist.")
+        return
+
+    try:
+        with open(output_file, "r") as f:
+            for line in f:
+                if line.startswith("# Catalog last updated:"):
+                    print(line.strip())
+                    break
+    except Exception as e:
+        print(f"Error reading the catalog: {e}")
+
+# File paths and URL of the PlanetS Catalog
+planets_catalog_url = ("None")
+planets_output_file = "./data/catalog_exoplanets_planets.dat"
+
+# Update PlanetS catalog
+if args.update_planets_catalog:
+    # Update the catalog
+    update_planets_exoplanet_catalog(planets_catalog_url, planets_output_file)
+else:
+    # Check for existing catalog and print the last update date
+    read_planets_last_update(planets_output_file)
+
+# Load exoplanet catalog
+if args.catalog == "NEA":
+    # Load NEA data
+    data_nea = np.genfromtxt(nea_output_file,delimiter="\t",unpack=True,usecols=(1,2,3,4,5,6),filling_values=0.0)
+
+    list_catalog_rp = data_nea[0]
+    list_catalog_rpe1 = data_nea[1]
+    list_catalog_rpe2 = data_nea[2]
+    list_catalog_mp = data_nea[3]
+    list_catalog_mpe1 = data_nea[4]
+    list_catalog_mpe2 = data_nea[5]
+
+    # Load the exoplanet names
+    list_catalog_names = np.genfromtxt(
+        nea_output_file, delimiter="\t", dtype=str, usecols=0
+    )
+
+    # Remove lines with empty Mp, Rp, or mass precision less than 50%
+    exo_mass_prec = 0.5
+    filter_nea = (list_catalog_rp!=0) & (list_catalog_mp!=0.0) \
+    & ( abs(list_catalog_mpe1)/list_catalog_mp < exo_mass_prec) \
+    & ( abs(list_catalog_mpe2)/list_catalog_mp < exo_mass_prec)
+
+    list_exo_rp = list_catalog_rp[filter_nea]
+    list_exo_rpe1 = list_catalog_rpe1[filter_nea]
+    list_exo_rpe2 = list_catalog_rpe2[filter_nea]
+    list_exo_mp = list_catalog_mp[filter_nea]
+    list_exo_mpe1 = list_catalog_mpe1[filter_nea]
+    list_exo_mpe2 = list_catalog_mpe2[filter_nea]
+    list_exo_names = list_catalog_names[filter_nea]
+elif args.catalog == "PlanetS":
+    # Load PlanetS data
+    data_planets = np.genfromtxt(planets_output_file,delimiter="\t",unpack=True,usecols=(1,2,3,4,5,6),filling_values=0.0)
+
+    list_catalog_rp = data_planets[0]
+    list_catalog_rpe1 = data_planets[1]
+    list_catalog_rpe2 = data_planets[2]
+    list_catalog_mp = data_planets[3]
+    list_catalog_mpe1 = data_planets[4]
+    list_catalog_mpe2 = data_planets[5]
+
+    # Load the exoplanet names
+    list_catalog_names = np.genfromtxt(
+        planets_output_file, delimiter="\t", dtype=str, usecols=0
+    )
+
+    # Remove lines with empty Mp and Rp
+    exo_mass_prec = 0.5
+    filter_planets = (list_catalog_rp!=0) & (list_catalog_mp!=0.0)
+
+    list_exo_rp = list_catalog_rp[filter_planets]
+    list_exo_rpe1 = list_catalog_rpe1[filter_planets]
+    list_exo_rpe2 = list_catalog_rpe2[filter_planets]
+    list_exo_mp = list_catalog_mp[filter_planets]
+    list_exo_mpe1 = list_catalog_mpe1[filter_planets]
+    list_exo_mpe2 = list_catalog_mpe2[filter_planets]
+    list_exo_names = list_catalog_names[filter_planets]
+
+
 
 # Targets catalog
 # The intended use is to showcase a few targets (dedicated study, new discovery, update of parameters, etc.)
