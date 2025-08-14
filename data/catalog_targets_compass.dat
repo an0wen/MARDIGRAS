@@ -1,7 +1,7 @@
-# Targets catalog - custom
+# Targets catalog - custom, list of planets of the COMPASS program https://compass-jwst.github.io/
 # 
 # Last update: 2025/08/13
-# Source: 
+# Source: list of planets from https://compass-jwst.github.io/planets.html , parameters from the NEA
 #
 # pl_name	pl_rade	pl_radeerr1	pl_radeerr2	pl_masse	pl_masseerr1	pl_masseerr2	pl_eqt
 TOI-134.01	1.63000000	0.14000000	-0.14000000	4.07000000	0.45000000	-0.45000000	998.00
