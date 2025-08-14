@@ -15,6 +15,7 @@ import requests
 import os
 from datetime import datetime
 import argparse
+from pathlib import Path
 
 # Define command-line arguments
 parser = argparse.ArgumentParser(description="Run the mardigras tool with optional features.")
@@ -41,6 +42,16 @@ parser.add_argument(
     help="Choose the exoplanet catalog to use. Default is NEA."
 )
 
+# Flag to choose target catalog
+# Default value
+default_catalog_targets = Path("./data/catalog_targets.dat")
+parser.add_argument(
+    "--catalog-targets", 
+    type=Path, 
+    default=default_catalog_targets,
+    help="Path to the target catalog file (default: ./data/catalog_targets.dat)"
+)
+
 args = parser.parse_args()
 
 #Paths to models
@@ -60,13 +71,13 @@ zeng_mass,zeng_purefe,zeng_rock,zeng_50wat,zeng_100wat,zeng_earth = np.loadtxt(p
 #
 ##############################################
 
-path_swe = path_models + "A25_SWE_all.dat"
+path_swe = path_models + "Aguichine2025_SWEET_all.dat"
 
 swe_top = np.array([0,1])
 swe_labels_top = ["20 mbar", "1 µbar"]
 swe_labels_host = ["Type M", "Type G"]
-# swe_teqs = [400, 500, 700, 900, 1100, 1300, 1500]
-swe_teqs = [500, 600, 700]
+swe_teqs = [400, 500, 700, 900, 1100, 1300, 1500]
+#swe_teqs = [500, 600, 700]
 swe_wmfs = [0.1,1,10,20,30,40,50,60,70,80,90,100]  # 12 water mass fractions from 0.05 to 0.60
 swe_masses = [0.2       ,  0.254855  ,  0.32475535,  0.41382762,  0.52733018,
         0.67196366,  0.85626648,  1.09111896,  1.39038559,  1.77173358,
@@ -93,7 +104,9 @@ swe_dim_age = swe_ages
 swe_dim_star = np.array([0,1])
 swe_dim_top = np.array([0,1])
 
-swe_data_radius = np.reshape(listrpfull,(2,2,12,3,20,17))
+swe_data_radius = np.reshape(listrpfull,(2,2,12,7,20,17))
+mask = np.isnan(swe_data_radius)
+swe_data_radius[mask] = -1
 
 fill_value = np.nan
 interp_swe = RegularGridInterpolator((swe_dim_top,
@@ -385,11 +398,21 @@ elif args.catalog == "PlanetS":
 # Targets catalog
 # The intended use is to showcase a few targets (dedicated study, new discovery, update of parameters, etc.)
 # The catalog of targets must have the same formatting as the exoplanet catalog.
+
+# Determine catalog targets path
+if args.catalog_targets and args.catalog_targets.exists():
+    catalog_targets_path = args.catalog_targets
+elif args.catalog_targets:
+    print(f"Warning: Provided file '{args.catalog_targets}' does not exist. Using default: '{default_catalog_targets}'")
+    catalog_targets_path = default_catalog_targets
+else:
+    catalog_targets_path = default_catalog_targets
+
 list_targets_rp,list_targets_rpe1,list_targets_rpe2,list_targets_mp,list_targets_mpe1,list_targets_mpe2\
-    = np.genfromtxt("./data/catalog_targets.dat",delimiter="\t",unpack=True,usecols=(1,2,3,4,5,6),filling_values=0.0)
+    = np.genfromtxt(catalog_targets_path,delimiter="\t",unpack=True,usecols=(1,2,3,4,5,6),filling_values=0.0)
 
 import csv
-file_path = "./data/catalog_targets.dat"
+file_path = catalog_targets_path
 list_targets_names = []
 with open(file_path, 'r') as file:
     reader = csv.reader(file, delimiter='\t')
@@ -682,8 +705,8 @@ ax_teq_swe = fig.add_axes([0.08, 0.80, 0.15, 0.02])  # [left, bottom, width, hei
 teq_swe_slider = Slider(
     ax=ax_teq_swe,
     label=r"T$_{\mathrm{eq}}$  ",
-    valmin=500.0,
-    valmax=700.0,
+    valmin=400.0,
+    valmax=1500.0,
     valinit=init_teq_swe,
     valfmt=' %4.0f K'
 )
