@@ -2,10 +2,11 @@
 # 
 # Last update: 2024/08/22
 # Query: https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=select+pl_name,pl_rade,pl_radeerr1,pl_radeerr2,pl_masse,pl_masseerr1,pl_masseerr2,pl_eqt+from+ps+where+default_flag=1+and+pl_controv_flag=0+and+pl_rade+is+not+null+and+pl_masse+is+not+null+and+pl_bmassprov='Mass'&format=tsv
-# Warning: remember to keep this header (10 lines, 1st planet on line 11)
 #
 # pl_name	pl_rade	pl_radeerr1	pl_radeerr2	pl_masse	pl_masseerr1	pl_masseerr2	pl_eqt
 TOI-836 b	1.704	0.067	-0.067	4.53000	0.92000	-0.86000	8.71000000000e+02
 TOI-836 c	2.587	0.088	-0.088	9.60000	2.70000	-2.50000	6.65000000000e+02
 GJ 1214 b	2.733	0.033	-0.031	8.41000	0.36000	-0.35000	5.67000000000e+02
 K2-18 b	2.370	0.220	-0.220	8.92000	1.70000	-1.60000	2.84000000000e+02
+GJ 357 b	1.2170	0.0840	-0.0830	1.840	0.310	-0.310	5.25000000000e+02
+TOI-260b	1.760	0.300	-0.300	3.97000	2.39000	-2.23000	4.89000000000e+02
