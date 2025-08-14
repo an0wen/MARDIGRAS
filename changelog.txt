@@ -180,3 +180,26 @@ Changes:
    to provide an approximate shape of mass-radius relations
    beyond the boil-off limit.
 
+#####################################################
+v2.4.1
+Author: Artyom (Artem) Aguichine
+Date: 2025/5/22
+
+Changes:
+1. The T24 model has been extended to 0.01 Gyr. This means
+   a new version of the model grid, and all the code.
+
+2. The SWE model is now accepted (change in readme).
+
+#####################################################
+v2.5.1
+Author: Artyom (Artem) Aguichine
+Date: 2025/8/13
+
+Changes:
+1. The A25 model has been extended in equilibrium temperature
+   to 400-1500 K (from SWE to SWEET). This means new grid, 
+   and new code.
+
+2. New argument added: "--catalog-targets". Use it to provide
+   the path to a target catalog different from the default one.
