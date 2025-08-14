@@ -15,6 +15,7 @@ import requests
 import os
 from datetime import datetime
 import argparse
+from pathlib import Path
 
 # Define command-line arguments
 parser = argparse.ArgumentParser(description="Run the mardigras tool with optional features.")
@@ -41,14 +42,22 @@ parser.add_argument(
     help="Choose the exoplanet catalog to use. Default is NEA."
 )
 
+# Flag to choose target catalog
+# Default value
+default_catalog_targets = Path("./data/catalog_targets.dat")
+parser.add_argument(
+    "--catalog-targets", 
+    type=Path, 
+    default=default_catalog_targets,
+    help="Path to the target catalog file (default: ./data/catalog_targets.dat)"
+)
+
 args = parser.parse_args()
 
 #Paths to models
 path_models = "./models/"
 
-path_aguichine = path_models + "Aguichine2021_fit_coefficients_2024.dat"
 path_zeng = path_models + "Zeng2016.dat"
-
 
 # Load curves from Zeng et al. 2016
 zeng_mass,zeng_purefe,zeng_rock,zeng_50wat,zeng_100wat,zeng_earth = np.loadtxt(path_zeng,delimiter="\t",skiprows=1,unpack=True)
@@ -56,17 +65,17 @@ zeng_mass,zeng_purefe,zeng_rock,zeng_50wat,zeng_100wat,zeng_earth = np.loadtxt(p
 
 ##############################################
 #
-#   MAKE SWE INTERPOLATOR (Aguichine+2024)
+#   MAKE SWEET INTERPOLATOR (Aguichine+2025)
 #
 ##############################################
 
-path_swe = path_models + "A25_SWE_all.dat"
+path_swe = path_models + "Aguichine2025_SWEET_all.dat"
 
 swe_top = np.array([0,1])
 swe_labels_top = ["20 mbar", "1 µbar"]
 swe_labels_host = ["Type M", "Type G"]
-# swe_teqs = [400, 500, 700, 900, 1100, 1300, 1500]
-swe_teqs = [500, 600, 700]
+swe_teqs = [400, 500, 700, 900, 1100, 1300, 1500]
+#swe_teqs = [500, 600, 700]
 swe_wmfs = [0.1,1,10,20,30,40,50,60,70,80,90,100]  # 12 water mass fractions from 0.05 to 0.60
 swe_masses = [0.2       ,  0.254855  ,  0.32475535,  0.41382762,  0.52733018,
         0.67196366,  0.85626648,  1.09111896,  1.39038559,  1.77173358,
@@ -93,7 +102,9 @@ swe_dim_age = swe_ages
 swe_dim_star = np.array([0,1])
 swe_dim_top = np.array([0,1])
 
-swe_data_radius = np.reshape(listrpfull,(2,2,12,3,20,17))
+swe_data_radius = np.reshape(listrpfull,(2,2,12,7,20,17))
+mask = np.isnan(swe_data_radius)
+swe_data_radius[mask] = -1
 
 fill_value = np.nan
 interp_swe = RegularGridInterpolator((swe_dim_top,
@@ -130,7 +141,7 @@ interp_zeng = RegularGridInterpolator((list_zeng_masses,dimcmf_zeng), data_zeng,
 
 ##############################################
 #
-#   MAKE GAS DWARF INTERPOLATOR (Tang+2024)
+#   MAKE GAS DWARF INTERPOLATOR (Tang+2025)
 #
 ##############################################
 
@@ -145,7 +156,7 @@ t24_labels = ["RCB", "20 mbar", "1 nbar"]
 
 t24_data_radius = np.zeros((3,2,4,4,11,8))
 
-data0 = np.genfromtxt(path_models+"Tang2024.dat",filling_values=fill_value,comments='#',skip_header=1,usecols=(5,6,7,8))
+data0 = np.genfromtxt(path_models+"Tang2025.dat",filling_values=fill_value,comments='#',skip_header=1,usecols=(5,6,7,8))
 t24_data_radius[0,:,:,:,:,:] = data0[:,0].reshape(2,4,4,11,8)
 t24_data_radius[1,:,:,:,:,:] = data0[:,1].reshape(2,4,4,11,8)
 t24_data_radius[2,:,:,:,:,:] = data0[:,2].reshape(2,4,4,11,8)
@@ -385,11 +396,21 @@ elif args.catalog == "PlanetS":
 # Targets catalog
 # The intended use is to showcase a few targets (dedicated study, new discovery, update of parameters, etc.)
 # The catalog of targets must have the same formatting as the exoplanet catalog.
+
+# Determine catalog targets path
+if args.catalog_targets and args.catalog_targets.exists():
+    catalog_targets_path = args.catalog_targets
+elif args.catalog_targets:
+    print(f"Warning: Provided file '{args.catalog_targets}' does not exist. Using default: '{default_catalog_targets}'")
+    catalog_targets_path = default_catalog_targets
+else:
+    catalog_targets_path = default_catalog_targets
+
 list_targets_rp,list_targets_rpe1,list_targets_rpe2,list_targets_mp,list_targets_mpe1,list_targets_mpe2\
-    = np.genfromtxt("./data/catalog_targets.dat",delimiter="\t",unpack=True,usecols=(1,2,3,4,5,6),filling_values=0.0)
+    = np.genfromtxt(catalog_targets_path,delimiter="\t",unpack=True,usecols=(1,2,3,4,5,6),filling_values=0.0)
 
 import csv
-file_path = "./data/catalog_targets.dat"
+file_path = catalog_targets_path
 list_targets_names = []
 with open(file_path, 'r') as file:
     reader = csv.reader(file, delimiter='\t')
@@ -638,7 +659,7 @@ ax.text(0.55, 1.23, '100% Liquid H2O',fontsize=5,
 #
 ##############################################
 
-# Aguichine+2024 Slider
+# Aguichine+2025 Slider
 
 # Label
 fig.text(0.05, 0.95, 'Aguichine et al. 2025',weight='bold',
@@ -682,8 +703,8 @@ ax_teq_swe = fig.add_axes([0.08, 0.80, 0.15, 0.02])  # [left, bottom, width, hei
 teq_swe_slider = Slider(
     ax=ax_teq_swe,
     label=r"T$_{\mathrm{eq}}$  ",
-    valmin=500.0,
-    valmax=700.0,
+    valmin=400.0,
+    valmax=1500.0,
     valinit=init_teq_swe,
     valfmt=' %4.0f K'
 )
@@ -726,10 +747,10 @@ top_swe_slider.valtext.set_position((1.53, 0.5))  # Shift text to the right outs
 top_swe_slider.valtext.set_text(swe_labels_top[init_top_swe])
 
 
-# Tang et al. 2024 Slider
+# Tang et al. 2025 Slider
 
 # Label
-fig.text(0.40, 0.95, 'Tang et al. 2024',weight='bold',
+fig.text(0.40, 0.95, 'Tang et al. 2025',weight='bold',
         color='red',
         bbox={'ec': 'white', 'fc':'white','color':'blue', 'pad': 10})
 
