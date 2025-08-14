@@ -57,9 +57,7 @@ args = parser.parse_args()
 #Paths to models
 path_models = "./models/"
 
-path_aguichine = path_models + "Aguichine2021_fit_coefficients_2024.dat"
 path_zeng = path_models + "Zeng2016.dat"
-
 
 # Load curves from Zeng et al. 2016
 zeng_mass,zeng_purefe,zeng_rock,zeng_50wat,zeng_100wat,zeng_earth = np.loadtxt(path_zeng,delimiter="\t",skiprows=1,unpack=True)
@@ -67,7 +65,7 @@ zeng_mass,zeng_purefe,zeng_rock,zeng_50wat,zeng_100wat,zeng_earth = np.loadtxt(p
 
 ##############################################
 #
-#   MAKE SWE INTERPOLATOR (Aguichine+2024)
+#   MAKE SWEET INTERPOLATOR (Aguichine+2025)
 #
 ##############################################
 
@@ -143,7 +141,7 @@ interp_zeng = RegularGridInterpolator((list_zeng_masses,dimcmf_zeng), data_zeng,
 
 ##############################################
 #
-#   MAKE GAS DWARF INTERPOLATOR (Tang+2024)
+#   MAKE GAS DWARF INTERPOLATOR (Tang+2025)
 #
 ##############################################
 
@@ -158,7 +156,7 @@ t24_labels = ["RCB", "20 mbar", "1 nbar"]
 
 t24_data_radius = np.zeros((3,2,4,4,11,8))
 
-data0 = np.genfromtxt(path_models+"Tang2024.dat",filling_values=fill_value,comments='#',skip_header=1,usecols=(5,6,7,8))
+data0 = np.genfromtxt(path_models+"Tang2025.dat",filling_values=fill_value,comments='#',skip_header=1,usecols=(5,6,7,8))
 t24_data_radius[0,:,:,:,:,:] = data0[:,0].reshape(2,4,4,11,8)
 t24_data_radius[1,:,:,:,:,:] = data0[:,1].reshape(2,4,4,11,8)
 t24_data_radius[2,:,:,:,:,:] = data0[:,2].reshape(2,4,4,11,8)
@@ -661,7 +659,7 @@ ax.text(0.55, 1.23, '100% Liquid H2O',fontsize=5,
 #
 ##############################################
 
-# Aguichine+2024 Slider
+# Aguichine+2025 Slider
 
 # Label
 fig.text(0.05, 0.95, 'Aguichine et al. 2025',weight='bold',
@@ -749,10 +747,10 @@ top_swe_slider.valtext.set_position((1.53, 0.5))  # Shift text to the right outs
 top_swe_slider.valtext.set_text(swe_labels_top[init_top_swe])
 
 
-# Tang et al. 2024 Slider
+# Tang et al. 2025 Slider
 
 # Label
-fig.text(0.40, 0.95, 'Tang et al. 2024',weight='bold',
+fig.text(0.40, 0.95, 'Tang et al. 2025',weight='bold',
         color='red',
         bbox={'ec': 'white', 'fc':'white','color':'blue', 'pad': 10})
 
