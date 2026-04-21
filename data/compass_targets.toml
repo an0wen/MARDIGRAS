@@ -1,0 +1,2 @@
+[catalog.paths]
+targets = "./data/catalog_targets_compass.dat"

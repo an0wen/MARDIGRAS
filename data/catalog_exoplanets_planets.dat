@@ -1,7 +1,7 @@
-# PlanetS Exopanet Catalog
-# Source: https://dace.unige.ch/exoplanets//
-# Last updated: 2025-02-25 00:00:00
-# pl_name	pl_rade	pl_radeerr1	pl_radeerr2	pl_masse	pl_masseerr1	pl_masseerr2	pl_eqt
+# DACE PlanetS Catalog
+# Source: https://dace.unige.ch/downloads/exoplanets/PLANETS.vot
+# Catalog last updated: 2026-04-21 06:30:13
+# pl_name pl_rade pl_radeerr1 pl_radeerr2 pl_masse pl_masseerr1 pl_masseerr2 pl_eqt
 55 Cnc e	1.871903	0.033627	0.033627	7.990195919999999	0.32100628	0.33054111999999997	
 BD-14 3065 b	21.588534	1.0536459999999999	1.0536459999999999	3931.5323599999992	292.40175999999997	276.51036	2001.0
 CoRoT-1 b	16.70141	0.89672	0.89672	327.36284	38.139359999999996	38.139359999999996	1898.0
