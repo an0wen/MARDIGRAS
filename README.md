@@ -1,4 +1,6 @@
 # MARDIGRAS
+<img width="200" alt="ChatGPT Image 21 avr  2026, 07_00_38 copie" src="https://github.com/user-attachments/assets/ca00ef20-f221-4394-98df-a57278790b91" />
+
 **Mass-Radius DIaGRAm with Sliders (MARDIGRAS)** is a visualization tool that allows simple and intuitive manipulation of mass-radius relationships (also known as iso-composition curves) using interactive sliders.
 
 While *mardigras* screen captures can be implemented in your scientific work (talks, posters, communications), if you are looking for paper-quality mass-radius diagrams we recommend the use of [*mr-plotter*](https://github.com/castro-gzlz/mr-plotter).
