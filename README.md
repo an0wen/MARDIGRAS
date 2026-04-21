@@ -1,4 +1,6 @@
 # MARDIGRAS
+<img width="200" alt="ChatGPT Image 21 avr  2026, 07_00_38 copie" src="https://github.com/user-attachments/assets/ca00ef20-f221-4394-98df-a57278790b91" />
+
 **Mass-Radius DIaGRAm with Sliders (MARDIGRAS)** is a visualization tool that allows simple and intuitive manipulation of mass-radius relationships (also known as iso-composition curves) using interactive sliders.
 
 While *mardigras* screen captures can be implemented in your scientific work (talks, posters, communications), if you are looking for paper-quality mass-radius diagrams we recommend the use of [*mr-plotter*](https://github.com/castro-gzlz/mr-plotter).
@@ -11,41 +13,34 @@ git clone https://github.com/an0wen/MARDIGRAS
 cd MARDIGRAS
 python3 mardigras.py
 ```
-<img width="400" alt="Capture d’écran 2024-12-19 à 16 40 53" src="https://github.com/user-attachments/assets/5b125d86-712b-4fba-a89a-afa08e008169" />
+<img width="400" alt="image" src="https://github.com/user-attachments/assets/2e17fe6b-b140-4326-a1e3-e969089c302c" />
 <br/>
 <br/>
 
 ### Available options
-*mardigras* can be run with the following options:
-1. Choose exoplanet catalog: "NEA" or "PlanetS".
-   ```
-   python3 mardigras.py --catalog [NEA/PlanetS]
-   ```
-   Default is "NEA" (NASA Exoplanet Archive).
-2. Updating the NEA catalog:
-   ```
-   python3 mardigras.py --update-nea-catalog
-   ```
-   This will print the following statement in the terminal:
-   ```
-   Catalog updated successfully and saved to ./data/catalog_exoplanets.dat
-   ```
-3. Updating the PlanetS catalog: Work in Progress
-4. Path to catalog of targets:
-   ```
-   python3 mardigras.py --catalog-targets ./data/catalog_targets_compass.dat
-   ```
+All parameters used by *mardigras* are defined in `./data/default_config.toml`. These are loaded by default, so do not delete it.
 
-## Contents of v2
+Instead, we recommend making a copy `./data/custom_config.toml` to work with, and overriding default parameters by passing the new config file to mardigras:
+```
+python3 mardigras.py --config ./data/custom_config.toml
+```
+
+Several config files can be provided at once, they will thus override parameters in the order of reading. For example:
+```
+python3 mardigras.py --config ./data/update_both_catalogs.toml --config ./data/compass_targets.toml --config ./data/planets_catalog.toml
+```
+this command launches *mardigras*, `./data/update_both_catalogs.toml` instructs to update both the NEA and PlanetS catalog from the internet, `./data/compass_targets.toml` instructs to use [COMPASS ](https://compass-jwst.github.io/) planets for targets (orange stars), and use the PlanetS catalog as the background exoplanet catalog. All three custom files are provided in this repository.
+
+## Contents of v3
 ### Interior structure models
 Three curves are controlled by sliders:
-1. <ins>Blue lines</ins>: Steam World model from Aguichine et al. 2025 (https://ui.adsabs.harvard.edu/abs/2025ApJ...988..186A/abstract), represents an envelope of pure water in a supercritical state, with a pure steam atmosphere on top.
-2. <ins>Red lines</ins>: Gas dwarf model from Tang et al. 2025 (https://ui.adsabs.harvard.edu/abs/2025ApJ...989...28T/abstract), represents an H-He gas envelope with metallicity ranging from 1xSolar to 50xSolar.
+1. <ins>Blue lines</ins>: Steam World model from Aguichine et al. 2025 (https://ui.adsabs.harvard.edu/abs/2025ApJ...988..186A/abstract), represents an envelope of pure water in a supercritical state, with a pure steam atmosphere on top, and models the thermal cooling of the planet (heat escapes, so the radius decreases over time).
+2. <ins>Red lines</ins>: Gas dwarf model from Tang et al. 2025 (https://ui.adsabs.harvard.edu/abs/2025ApJ...989...28T/abstract), represents an H-He gas envelope with metallicity ranging from 1xSolar to 50xSolar. This model also includes the thermal evolution of the planet (radius as a function of age).
 3. <ins>Brown lines</ins>: Rocky planets model from Zeng et al. 2016 (https://ui.adsabs.harvard.edu/abs/2016ApJ...819..127Z/abstract), for terrestrial planets with variable (iron) core mass fractions.
 
 Additionally, five static profiles from Zeng et al. 2016 are shown, from low to high radius: pure iron core, Earth-like composition, pure mantle, 50% liquid water, and 100% liquid water.
 
-### Planets catalogs
+### Planets
 Three populations of planets are shown:
 1. Exoplanets catalog (NEA or PlanetS) in the background (grey dots).
 2. A smaller sample of highlighted targets (orange stars).
@@ -61,8 +56,8 @@ The [NASA Exoplanet Archive (NAE)](https://exoplanetarchive.ipac.caltech.edu/) i
 https://exoplanetarchive.ipac.caltech.edu/TAP/sync?query=select+pl_name,pl_rade,pl_radeerr1,pl_radeerr2,pl_masse,pl_masseerr1,pl_masseerr2,pl_eqt+from+ps+where+default_flag=1+and+pl_controv_flag=0+and+pl_rade+is+not+null+and+pl_masse+is+not+null+and+pl_bmassprov='Mass'&format=tsv
 
 The following arguments have been added to the query:
-- Planetary Systems "ps" database
-- The default flag is 1
+- Planetary Systems "ps" database (1 line per planet and publication, so each planet can have multiple entries)
+- The default flag is 1 (only keeps the "best" planet data among all entries)
 - The controversial flag is 0
 - The planet radius is not null
 - The planet mass is not null
@@ -75,18 +70,20 @@ Please refer to the [NEA website](https://exoplanetarchive.ipac.caltech.edu/docs
 
 The PlanetS catalog is a curated catalog with precise and reliable mass and radius measurements. *mardigras* uses the updated version of this catalog published in Parc et al. 2024 (https://ui.adsabs.harvard.edu/abs/2024A%26A...688A..59P/abstract). This catalog is based on the NASA Exoplanet Archive, but only includes transiting planets with relative measurement uncertainties smaller than 25% in mass and 8% in radius. Each newly discovered planet is studied individually before being added to the PlanetS catalog to ensure reliability, with a special treatment of TTVs (Transit Timing Variations). 
 
-To show the PlanetS catalog, launch *mardigras* with the following command line argument:
+To use the PlanetS catalog instead of the NEA, use a custom config file where the section `[catalog]` contains the parameter `active` set to `"PlanetS"`:
 ```
-python3 mardigras.py --catalog PlanetS
+[catalog]
+active = "PlanetS"
 ```
 
 #### Catalog of targets
 
 Highlighted targets are intended for dedicated studies, discoveries, or parameter updates of a few planets, a system, or a group of planets. These planets are shown as big orange stars.
 
-To switch between different catalogs of targets, run *mardigras* by specifying the path to the desired target catalog:
+To use a different target catalog, use a custom config file where the section `[catalog.paths]` contains the parameter `targets` set to a different path, for example:
 ```
-python3 mardigras.py --catalog-targets ./data/catalog_targets_compass.dat
+[catalog.paths]
+targets = "./data/catalog_targets_compass.dat"
 ```
 In the command above, the highlighted targets correspond to the targets of the COMPASS program (https://compass-jwst.github.io/).
 
@@ -96,8 +93,9 @@ In the command above, the highlighted targets correspond to the targets of the C
 - `numpy` v2.0.1
 - `matplotlib` v3.10.0
 - `scipy` v1.15.2
+- `pandas` v2.2.2
 
-In addition to this, *mardigras* uses Python built-in packages `requests`, `os`, `datetime`, `argparse` and `pathlib`. 
+In addition to this, *mardigras* uses Python built-in packages `requests`, `os`, `datetime`, `argparse`, `tomllib`, `xml` and `pathlib`. 
 
 We strive for using simple packages to minimize compatibility issues.
 
@@ -122,9 +120,9 @@ This model is controled with 5 sliders:
 - WMF: water mass fraction.
 - Atmosphere top pressure: 20 mbar or 1 µbar, pressure level at which the atmosphere is assumed to be opaque (measured radius). Most telescopes measure the planetary radius a wavelength of around 1 µm. For most atmospheric compositions, the atmosphere becomes optically thick at around 20 mbar. However, it is possible to form high-alitude aerosols that will make the atmosphere opaque at a pressure level of 1 µbar. It is thus important to know 1) the telescope filter, 2) the atmosphere composition, and 3) the atmosphere microphysics to understand what radius is being measured.
 
-### Tang et al. 2024: gas dwarf
+### Tang et al. 2025: gas dwarf
 
-The Tang et al. 2024 model is a 6-layer interior structure model (center to surface: solid iron core, liquid iron core, solid mantle, liquid mantle, H<sub>2</sub>-He dominated envelope, H<sub>2</sub>-He dominated atmosphere).
+The Tang et al. 2025 model is a 6-layer interior structure model (center to surface: solid iron core, liquid iron core, solid mantle, liquid mantle, H<sub>2</sub>-He dominated envelope, H<sub>2</sub>-He dominated atmosphere).
 
 This model is controled with 5 sliders:
 - Metallicity: 1 to 50 times solar. Changes both the atmosphere and envelope properties. In the envelope, H<sub>2</sub>O is used as a proxy for all volatiles, and a metallicity of 50 times solar corresponds to an envelope ~40% of H<sub>2</sub>O by mass.

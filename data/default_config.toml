@@ -1,0 +1,21 @@
+# Default config file for mardigras.
+# Do not delete this file, as all keys are used for default values.
+# Recommended use is to make a copy of this file "./data/custom_config.toml", change the custom file, and run mardigras with "python3 mardigras.py --config ./data/custom_config.toml"
+
+[catalog]
+# Active exoplanet catalog, string. currently handles: "NEA" or "PlanetS"
+active = "NEA"
+
+# Update the catalog, bool.
+update_nea = false
+update_planets = false
+
+[catalog.paths]
+# Paths to various catalogs
+nea = "./data/catalog_exoplanets_nea.dat"
+planets = "./data/catalog_exoplanets_planets.dat"
+targets = "./data/catalog_targets.dat"
+
+[models]
+# Path to the directory with all model grids
+path = "./models/"
