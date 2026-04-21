@@ -27,7 +27,7 @@ python3 mardigras.py --config ./data/custom_config.toml
 
 Several config files can be provided at once, they will thus override parameters in the order of reading. For example:
 ```
-python3 mardigras_v3.0.0.py --config ./data/update_both_catalogs.toml --config ./data/compass_targets.toml --config ./data/planets_catalog.toml
+python3 mardigras.py --config ./data/update_both_catalogs.toml --config ./data/compass_targets.toml --config ./data/planets_catalog.toml
 ```
 this command launches *mardigras*, `./data/update_both_catalogs.toml` instructs to update both the NEA and PlanetS catalog from the internet, `./data/compass_targets.toml` instructs to use [COMPASS ](https://compass-jwst.github.io/) planets for targets (orange stars), and use the PlanetS catalog as the background exoplanet catalog. All three custom files are provided in this repository.
 
