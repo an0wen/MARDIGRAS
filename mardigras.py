@@ -171,7 +171,8 @@ interp_zeng = RegularGridInterpolator((array_zeng_masses,dimcmf_zeng), data_zeng
 
 # dimensions of the T25 grid
 dim_met_t25 = np.array([1.0,50.0])
-dim_age_t25 = np.log10(np.array([0.01,0.1,1.0,10.0]))
+dim_age_t25 = np.array([0.01,0.1,1.0,10.0])
+dim_logage_t25 = np.log10(dim_age_t25)
 dim_finc_t25= np.array([1.0,10.0,100.0,1000.0])
 dim_teq_t25 = 278.0*(dim_finc_t25)**(0.25)
 dim_mass_t25= np.array([1,2,3,4,5,6,8,10,13,16,20])
@@ -190,7 +191,7 @@ t25_data_radius[2,:,:,:,:,:] = data0[:,2].reshape(2,4,4,11,8)
 # construct interpolator on T25 grid
 interp_t25 = RegularGridInterpolator((dim_top_t25,
                                       dim_met_t25, 
-                                      dim_age_t25, 
+                                      dim_logage_t25, 
                                       dim_teq_t25, 
                                       dim_mass_t25, 
                                       dim_fenv_t25), 
