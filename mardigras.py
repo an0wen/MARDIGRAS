@@ -17,7 +17,10 @@ from matplotlib import patheffects
 import os
 from pathlib import Path
 from datetime import datetime
-import tomllib
+try:
+    import tomllib
+except:
+    import toml as tomllib
 import argparse
 import pandas as pd
 
@@ -657,8 +660,8 @@ def update_annot(ind):
     """Update the annotation based on the index of the closest point."""
     x, y = catalog_points[0].get_data()
     annot.xy = (x[ind["ind"][0]], y[ind["ind"][0]])
-    text = f"{catalog_exoplanets["pl_name"].iloc[
-ind['ind'][0]]}"
+    text = catalog_exoplanets["pl_name"].iloc[
+ind['ind'][0]]
     annot.set_text(text)
     annot.get_bbox_patch().set_alpha(0.8)
 
@@ -778,7 +781,7 @@ wmf_sweet_slider = Slider(
 )
 wmf_sweet_slider.label.set_ha('left')
 wmf_sweet_slider.label.set_position((-0.4, 0.5))
-wmf_sweet_slider.valtext.set_text(f'{init_wmf_sweet*100:#.3g} %')
+wmf_sweet_slider.valtext.set_text(f"{init_wmf_sweet*100:#.3g} %")
 wmf_sweet_slider.valtext.set_ha('right')
 wmf_sweet_slider.valtext.set_position((1.53, 0.5))  # Shift text to the right outside the slider
 
@@ -809,7 +812,7 @@ age_sweet_slider = Slider(
 )
 age_sweet_slider.label.set_ha('left')
 age_sweet_slider.label.set_position((-0.4, 0.5))
-age_sweet_slider.valtext.set_text(f'{init_age_sweet:#.3g} Gyr')
+age_sweet_slider.valtext.set_text(f"{init_age_sweet:#.3g} Gyr")
 age_sweet_slider.valtext.set_ha('right')
 age_sweet_slider.valtext.set_position((1.63, 0.5))  # Shift text to the right outside the slider
 
@@ -867,7 +870,7 @@ age_t25_slider = Slider(
 )
 age_t25_slider.label.set_ha('left')
 age_t25_slider.label.set_position((-0.4, 0.5))
-age_t25_slider.valtext.set_text(f'{init_age_t25:#.3g} Gyr')
+age_t25_slider.valtext.set_text(f"{init_age_t25:#.3g} Gyr")
 age_t25_slider.valtext.set_ha('right')
 age_t25_slider.valtext.set_position((1.65, 0.5))  # Shift text to the right outside the slider
 
@@ -899,7 +902,7 @@ fenv_t25_slider = Slider(
 )
 fenv_t25_slider.label.set_ha('left')
 fenv_t25_slider.label.set_position((-0.4, 0.5))
-fenv_t25_slider.valtext.set_text(f'{init_fenv_t25:#.3g} %')
+fenv_t25_slider.valtext.set_text(f"{init_fenv_t25:#.3g} %")
 fenv_t25_slider.valtext.set_ha('right')
 fenv_t25_slider.valtext.set_position((1.65, 0.5))  # Shift text to the right outside the slider
 
@@ -942,10 +945,10 @@ cmf_zeng_slider = Slider(
 def update(val):
     # Update SWE
     wmf_sweet_linear = 10**wmf_sweet_slider.val
-    wmf_sweet_slider.valtext.set_text(f'{wmf_sweet_linear*100:#.3g} %')  # Update displayed value
+    wmf_sweet_slider.valtext.set_text(f"{wmf_sweet_linear*100:#.3g} %")  # Update displayed value
 
     age_linear_sweet = 10**age_sweet_slider.val
-    age_sweet_slider.valtext.set_text(f'{age_linear_sweet:#.3g} Gyr')  # Update displayed value
+    age_sweet_slider.valtext.set_text(f"{age_linear_sweet:#.3g} Gyr")  # Update displayed value
 
     host_sweet_index = int(host_sweet_slider.val)
     host_sweet_slider.valtext.set_text(sweet_labels_host[host_sweet_index])
@@ -959,10 +962,10 @@ def update(val):
 
     # Update T25
     age_t25_linear = 10**age_t25_slider.val
-    age_t25_slider.valtext.set_text(f'{age_t25_linear:#.3g} Gyr')  # Update displayed value
+    age_t25_slider.valtext.set_text(f"{age_t25_linear:#.3g} Gyr")  # Update displayed value
 
     fenv_t25_linear = 10**fenv_t25_slider.val
-    fenv_t25_slider.valtext.set_text(f'{fenv_t25_linear:#.3g} %')  # Update displayed value
+    fenv_t25_slider.valtext.set_text(f"{fenv_t25_linear:#.3g} %")  # Update displayed value
 
     func_t25_index = int(top_t25_slider.val)
     top_t25_slider.valtext.set_text(t25_labels[func_t25_index])
